@@ -1,0 +1,214 @@
+42789079
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>طائفة الظلال</title>
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: yellow;
+        transition: background-color 2s linear;
+    }
+
+    .cover {
+        width: 100%;
+        height: 200px;
+        background: url("cover.jpg") center/cover no-repeat;
+    }
+
+    .profile {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 5px solid red;
+        position: relative;
+        top: -75px;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 10px red; }
+        50% { box-shadow: 0 0 25px red; }
+    }
+
+    .name {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: red;
+        text-shadow: 2px 2px black;
+        animation: namePulse 2s infinite;
+        margin-top: -50px;
+    }
+
+    @keyframes namePulse {
+        0%, 100% { color: red; }
+        50% { color: purple; }
+    }
+
+    .main-button {
+        padding: 10px 20px;
+        background: black;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin: 20px;
+        font-size: 1.2em;
+    }
+
+    .extra-buttons {
+        display: none;
+        margin-bottom: 20px;
+    }
+
+    .extra-buttons button {
+        margin: 5px;
+        padding: 10px;
+        background: purple;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* زر رفع الصور */
+    .upload-btn {
+        margin: 20px;
+        padding: 10px;
+        background: green;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* إدخال كلمة السر */
+    .password-section {
+        margin-top: 20px;
+    }
+    .password-input {
+        padding: 8px;
+        border: 2px solid black;
+        border-radius: 5px;
+    }
+    .check-btn {
+        padding: 8px 15px;
+        background: gray;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-left: 5px;
+    }
+
+    .posts-container {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        direction: rtl;
+        padding: 20px;
+    }
+
+    .posts-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 2px solid black;
+        object-fit: cover;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .posts-container img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 10px purple;
+    }
+</style>
+</head>
+<body>
+
+<div class="cover"></div>
+<img src="profile.jpg" class="profile" alt="صورة بروفايل">
+<div class="name">طائفة الظلام</div>
+
+<button class="main-button" onclick="toggleButtons()">عرض الأزرار</button>
+<div class="extra-buttons" id="extraBtns">
+    <button>زر 1</button>
+    <button>زر 2</button>
+    <button>زر 3</button>
+    <button>زر 4</button>
+    <button>زر 5</button>
+    <button>زر 6</button>
+    <button>زر 7</button>
+    <button>زر 8</button>
+    <button>زر 9</button>
+    <button>زر 10</button>
+</div>
+
+<!-- إدخال كلمة السر -->
+<div class="password-section">
+    <input type="password" id="password" placeholder="أدخل كلمة السر" class="password-input">
+    <button class="check-btn" onclick="checkPassword()">تحقق</button>
+</div>
+
+<!-- زر رفع الصور (مقفل حتى إدخال كلمة السر) -->
+<input type="file" id="upload" accept="image/*" style="display:none" onchange="addPost(event)">
+<button class="upload-btn" id="uploadBtn" onclick="uploadImage()" disabled>📷 نشر صورة</button>
+
+<div class="posts-container" id="posts">
+    <!-- الصور ستضاف هنا -->
+</div>
+
+<script>
+    let passwordEntered = false;
+
+    // تغيير الألوان تدريجياً
+    const colors = ["yellow", "purple", "red", "black"];
+    let i = 0;
+    function changeColor() {
+        document.body.style.backgroundColor = colors[i];
+        i = (i + 1) % colors.length;
+    }
+    setInterval(changeColor, 2000);
+    changeColor();
+
+    function toggleButtons() {
+        const extraBtns = document.getElementById("extraBtns");
+        extraBtns.style.display = extraBtns.style.display === "block" ? "none" : "block";
+    }
+
+    // تحقق من كلمة السر
+    function checkPassword() {
+        let pass = document.getElementById("password").value;
+        if (pass === "عالم المظلم") {
+            passwordEntered = true;
+            document.getElementById("uploadBtn").disabled = false;
+            alert("✅ تم فتح إمكانية نشر الصور");
+        } else {
+            alert("❌ كلمة السر خاطئة");
+        }
+    }
+
+    // فتح اختيار الصورة
+    function uploadImage() {
+        if (passwordEntered) {
+            document.getElementById('upload').click();
+        }
+    }
+
+    // رفع صورة جديدة
+    function addPost(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement("img");
+                img.src = e.target.result;
+                document.getElementById("posts").appendChild(img);
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+
+</body>
+</html>
