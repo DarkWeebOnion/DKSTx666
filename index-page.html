@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -6,174 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>الصفحة الرئيسية</title>
 <style>
-  body {
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
+body {
     margin: 0;
-  }
-  header {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: white;
+}
+header {
     display: flex;
     justify-content: space-around;
     background: #222;
     padding: 10px;
-  }
-  header button {
-    background: red;
+}
+header button {
+    background: #444;
     border: none;
     padding: 10px;
     color: white;
     cursor: pointer;
     border-radius: 5px;
-  }
-  header button:hover {
-    background: darkred;
-  }
-  .posts {
-    padding: 10px;
-  }
-  .post {
-    background: rgba(255,255,255,0.05);
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-  }
-  .post img, .post video {
-    max-width: 100%;
-    border-radius: 5px;
-    margin-top: 5px;
-  }
-  .reactions button {
-    font-size: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    margin: 5px;
-  }
-  .comments {
-    margin-top: 10px;
-  }
-  .comments img {
-    max-width: 100px;
-    border-radius: 5px;
-  }
-  .comment-input {
-    display: flex;
-    gap: 5px;
-    margin-top: 5px;
-  }
-  .comment-input input {
-    flex: 1;
+}
+header button.active {
+    background: #660000;
+}
+#groupControls, #groupFeatures {
+    padding: 15px;
+    display: none;
+}
+input, select {
     padding: 5px;
+    margin: 5px 0;
+    width: 100%;
+}
+button {
+    padding: 10px;
+    margin-top: 5px;
+}
+.transparent {
+    opacity: 0.5;
+    pointer-events: none;
+}
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+    background: #333;
+    margin: 5px 0;
     border-radius: 5px;
-    border: none;
-  }
-  .comment-input button {
-    background: red;
-    border: none;
-    padding: 5px 10px;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-  }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <button onclick="showSection('posts')">📜 واجهة المنشورات</button>
-  <button onclick="alert('📩 الدردشة الخاصة لم تُبرمج بعد')">💬 الدردشة الخاصة</button>
-  <button onclick="alert('👥 إنشاء دردشة جماعية لم تُبرمج بعد')">➕ إنشاء دردشة جماعية</button>
-  <button onclick="logout()">🚪 تسجيل خروج</button>
+    <button id="postsBtn">واجهة المنشورات</button>
+    <button id="privateChatBtn">الدردشة الخاصة</button>
+    <button id="groupChatBtn">إنشاء دردشة جماعية</button>
 </header>
 
-<div id="content">
-  <div class="posts" id="posts-section"></div>
+<div id="groupControls">
+    <button id="createGroupBtn">إنشاء مجموعة دردشة</button>
+</div>
+
+<div id="groupFeatures">
+    <h3>إدارة المجموعة</h3>
+    <label>اسم المجموعة:</label>
+    <input type="text" id="groupName">
+    <label>صورة المجموعة:</label>
+    <input type="file" id="groupImage">
+    <button id="saveGroup">حفظ الإعدادات</button>
+    <hr>
+    <button id="addMembersBtn">إضافة أعضاء</button>
+    <div id="membersList"></div>
+    <hr>
+    <label><input type="checkbox" id="toggleNick"> السماح بتغيير الكنية</label><br>
+    <label><input type="checkbox" id="toggleImage"> السماح بتغيير صورة المجموعة</label><br>
+    <label><input type="checkbox" id="toggleName"> السماح بتغيير اسم المجموعة</label><br>
+    <label><input type="checkbox" id="toggleAddMembers"> السماح بإضافة الأعضاء</label>
 </div>
 
 <script>
-const postsData = [
-  {
-    id: 1,
-    author: "Shadow King",
-    type: "image",
-    src: "https://placekitten.com/400/300",
-    reactions: { "😆": 0, "💖": 0, "😡": 0, "😮": 0, "🥵": 0 },
-    comments: []
-  },
-  {
-    id: 2,
-    author: "Dark Goblin",
-    type: "video",
-    src: "https://www.w3schools.com/html/mov_bbb.mp4",
-    reactions: { "😆": 0, "💖": 0, "😡": 0, "😮": 0, "🥵": 0 },
-    comments: []
-  }
-];
+let isVIP = localStorage.getItem("vip") === "true";
+let groups = JSON.parse(localStorage.getItem("groups") || "[]");
 
-function showSection(section) {
-  if(section === 'posts') {
-    renderPosts();
-  }
+document.getElementById("groupChatBtn").onclick = function() {
+    document.getElementById("groupChatBtn").classList.toggle("active");
+    document.getElementById("groupControls").style.display = 
+        document.getElementById("groupControls").style.display === "block" ? "none" : "block";
+};
+
+document.getElementById("createGroupBtn").onclick = function() {
+    document.getElementById("groupFeatures").style.display = "block";
+    let newGroup = {
+        name: "",
+        image: "",
+        members: [],
+        allowNick: true,
+        allowImage: true,
+        allowName: true,
+        allowAdd: true
+    };
+    groups.push(newGroup);
+    localStorage.setItem("groups", JSON.stringify(groups));
+};
+
+document.getElementById("saveGroup").onclick = function() {
+    let lastGroup = groups[groups.length - 1];
+    lastGroup.name = document.getElementById("groupName").value;
+    lastGroup.allowNick = document.getElementById("toggleNick").checked;
+    lastGroup.allowImage = document.getElementById("toggleImage").checked;
+    lastGroup.allowName = document.getElementById("toggleName").checked;
+    lastGroup.allowAdd = document.getElementById("toggleAddMembers").checked;
+    localStorage.setItem("groups", JSON.stringify(groups));
+};
+
+document.getElementById("addMembersBtn").onclick = function() {
+    let username = prompt("أدخل اسم المستخدم لإضافته:");
+    if(username) {
+        let lastGroup = groups[groups.length - 1];
+        if(lastGroup.allowAdd || isVIP) {
+            lastGroup.members.push({name: username, nick: username});
+            localStorage.setItem("groups", JSON.stringify(groups));
+            renderMembers(lastGroup.members);
+        } else {
+            alert("إضافة الأعضاء غير مسموح بها");
+        }
+    }
+};
+
+function renderMembers(members) {
+    let list = document.getElementById("membersList");
+    list.innerHTML = "";
+    members.forEach((m, index) => {
+        let div = document.createElement("div");
+        div.className = "member-item";
+        div.innerHTML = `<span>${m.nick}</span> 
+        <button ${!isVIP ? 'class="transparent"' : ''} onclick="removeMember(${index})">إزالة</button>`;
+        list.appendChild(div);
+    });
 }
 
-function renderPosts(){
-  const container = document.getElementById("posts-section");
-  container.innerHTML = "";
-  postsData.forEach(post => {
-    let media = post.type === "image" ? 
-      `<img src="${post.src}">` : 
-      `<video src="${post.src}" controls></video>`;
-
-    let reactionsHTML = Object.keys(post.reactions).map(emoji => 
-      `<button onclick="react(${post.id}, '${emoji}')">${emoji} ${post.reactions[emoji]}</button>`
-    ).join("");
-
-    let commentsHTML = post.comments.map(c => 
-      `<p>💬 ${c}</p>`
-    ).join("");
-
-    container.innerHTML += `
-      <div class="post">
-        <b>${post.author}</b>
-        ${media}
-        <div class="reactions">${reactionsHTML}</div>
-        <div class="comments">
-          ${commentsHTML}
-          <div class="comment-input">
-            <input type="text" placeholder="أكتب تعليق أو ضع رابط صورة" id="comment-${post.id}">
-            <button onclick="addComment(${post.id})">نشر</button>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-}
-
-function react(postId, emoji){
-  let post = postsData.find(p => p.id === postId);
-  post.reactions[emoji]++;
-  renderPosts();
-}
-
-function addComment(postId){
-  let input = document.getElementById(`comment-${postId}`);
-  if(input.value.trim() !== ""){
-    postsData.find(p => p.id === postId).comments.push(input.value.trim());
-    input.value = "";
-    renderPosts();
-  }
-}
-
-function logout(){
-  localStorage.removeItem("newUser");
-  window.location.href = "index.html";
-}
-
-window.onload = () => {
-  renderPosts();
+window.removeMember = function(index) {
+    let lastGroup = groups[groups.length - 1];
+    lastGroup.members.splice(index, 1);
+    localStorage.setItem("groups", JSON.stringify(groups));
+    renderMembers(lastGroup.members);
 };
 </script>
 
 </body>
 </html>
+
