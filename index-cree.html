@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إنشاء حساب</title>
+<style>
+  body {
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .form-container {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+  }
+  input, select, textarea, button {
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+  }
+  input, select, textarea {
+    background: rgba(255,255,255,0.1);
+    color: white;
+  }
+  button {
+    background: red;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: darkred;
+  }
+</style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>إنشاء حساب</h2>
+    <label>تعيين صورة:</label>
+    <input type="file" id="avatar" accept="image/*">
+
+    <label>الاسم:</label>
+    <input type="text" id="name" placeholder="أدخل اسمك">
+
+    <label>اسم المستخدم:</label>
+    <input type="text" id="username" placeholder="Shadow_goblin">
+
+    <label>الجنس:</label>
+    <select id="gender">
+      <option value="">اختر الجنس</option>
+      <option value="ذكر">ذكر</option>
+      <option value="أنثى">أنثى</option>
+    </select>
+
+    <label>وصف المصدر (اختياري):</label>
+    <textarea id="desc" placeholder="اكتب وصفاً..."></textarea>
+
+    <button onclick="createAccount()">إنشاء حساب</button>
+  </div>
+
+<script>
+function createAccount(){
+  const avatar = document.getElementById("avatar").files[0];
+  const name = document.getElementById("name").value.trim();
+  const username = document.getElementById("username").value.trim();
+  const gender = document.getElementById("gender").value;
+
+  if(!avatar || !name || !username || !gender){
+    alert("⚠ يرجى ملء جميع الحقول المطلوبة وتعيين صورة.");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const userData = {
+      avatar: e.target.result,
+      name: name,
+      username: username,
+      gender: gender,
+      desc: document.getElementById("desc").value.trim()
+    };
+    localStorage.setItem("newUser", JSON.stringify(userData));
+    window.location.href = "index-page.html";
+  };
+  reader.readAsDataURL(avatar);
+}
+</script>
+</body>
+</html>
