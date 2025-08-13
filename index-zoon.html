@@ -1,138 +1,17 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>قائمة النشاط</title>
-<style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
-  }
-  .menu-btn {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    background: red;
-    color: white;
-    border: none;
-    padding: 12px 18px;
-    font-size: 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    z-index: 1000;
-  }
-  .sidebar {
-    position: fixed;
-    top: 0;
-    right: -320px;
-    width: 300px;
-    height: 100%;
-    background: rgba(20, 20, 20, 0.95);
-    transition: right 0.3s ease;
-    padding: 20px;
-    overflow-y: auto;
-    box-shadow: -3px 0 10px rgba(0,0,0,0.5);
-  }
-  .sidebar.active {
-    right: 0;
-  }
-  .user-card {
-    display: flex;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-  }
-  .user-card img {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid white;
-    margin-right: 10px;
-  }
-  .user-info {
-    flex: 1;
-  }
-  .user-info h3 {
-    margin: 0;
-    font-size: 1rem;
-  }
-  .status {
-    font-size: 0.85rem;
-    color: lightgreen;
-  }
-  .offline {
-    color: lightcoral;
-  }
-  .ban-btn {
-    background: crimson;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    font-size: 0.85rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .ban-btn:hover {
-    background: darkred;
-  }
-</style>
-</head>
-<body>
-
-<button class="menu-btn" onclick="toggleMenu()">☰ القائمة</button>
-
-<div class="sidebar" id="sidebar">
-  <h2>نشاط المستخدمين</h2>
-  <div id="userList"></div>
-</div>
 
 <script>
-  function toggleMenu() {
-    document.getElementById("sidebar").classList.toggle("active");
-    loadUsers();
-  }
 
-  function loadUsers() {
-    let users = JSON.parse(localStorage.getItem("users") || "[]");
-    let userList = document.getElementById("userList");
-    userList.innerHTML = "";
-
-    users.forEach((user, index) => {
-      let statusText = user.active ? "نشط الآن" : "آخر ظهور: " + user.lastSeen;
-      let statusClass = user.active ? "status" : "status offline";
-
-      let card = document.createElement("div");
-      card.className = "user-card";
-      card.innerHTML = `
-        <img src="${user.image}" alt="${user.username}">
-        <div class="user-info">
-          <h3>${user.username}</h3>
-          <div class="${statusClass}">${statusText}</div>
-        </div>
-        <button class="ban-btn" onclick="banUser(${index})">حظر</button>
-      `;
-      userList.appendChild(card);
-    });
-  }
-
-  function banUser(index) {
-    let users = JSON.parse(localStorage.getItem("users") || "[]");
-    if (users[index]) {
-      users[index].active = false;
-      users[index].lastSeen = new Date().toLocaleString("ar-EG");
-      localStorage.setItem("users", JSON.stringify(users));
-      loadUsers();
-      alert(`تم حظر ${users[index].username} فورًا`);
+(function(){
+    let isVIP = localStorage.getItem("isVIP") === "true";
+    if(!isVIP){
+        let pass = prompt("VIP");
+        if(pass === "紅"){
+            localStorage.setItem("isVIP", "true");
+            alert("✅");
+        } else {
+            alert("❌");
+            window.location.href = "index.html";
+        }
     }
-  }
+})();
 </script>
-
-</body>
-</html>
-
