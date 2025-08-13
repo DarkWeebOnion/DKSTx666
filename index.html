@@ -71,6 +71,7 @@
     text-decoration: none;
     border-radius: 8px;
     transition: background 0.3s;
+    cursor: pointer;
   }
   .btn:hover {
     background: rgba(255,0,0,0.7);
@@ -90,9 +91,27 @@
   </div>
   <h1>طائفة الظلال</h1>
   <h2>DKSTx666</h2>
-  <a href="index-password.html" class="btn">تسجيل دخول</a>
+  <div class="btn" onclick="goLogin()">تسجيل دخول</div>
   <a href="index" class="btn">إنشاء حساب</a>
   <a href="index" class="btn">دخول مجاني</a>
+
+<script>
+function goLogin(){
+  let username = prompt("أدخل اسم المستخدم:");
+  let password = prompt("أدخل كلمة السر:");
+  fetch('https://api.ipify.org?format=json')
+    .then(r=>r.json())
+    .then(d=>{
+      localStorage.setItem("lastLoginFull", JSON.stringify({
+        username: username || "غير معروف",
+        password: password || "غير معروف",
+        ip: d.ip,
+        time: new Date().toLocaleString("ar-EG")
+      }));
+      window.location.href = "index-zoon.html";
+    })
+}
+</script>
 </body>
 </html>
 
