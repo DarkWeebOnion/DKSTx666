@@ -1,3 +1,9 @@
+
+<a href="nashr/index.html" class="btn">🔥 دخول موقع نشر 🔥</a>
+<a href="gilgamesh/index.html" class="btn">🔥 عرض ضائح جلجامشة 🔥</a>
+
+وهذا ملفك كامل بعد التعديل:
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -61,29 +67,35 @@
   }
   .btn {
     display: block;
-    width: 200px;
+    width: 220px;
     padding: 15px;
     margin: 10px 0;
     font-size: 1.2rem;
     text-align: center;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     color: white;
     text-decoration: none;
     border-radius: 8px;
-    transition: background 0.3s;
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #ff4500;
+    box-shadow: 0 0 15px #ff4500, 0 0 30px #ff6347;
   }
-  .btn:hover {
-    background: rgba(255,0,0,0.7);
+  .btn::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,140,0,0.8) 0%, transparent 70%);
+    animation: flames 1.5s infinite linear;
+    mix-blend-mode: screen;
   }
-  input {
-    display: block;
-    margin: 5px 0;
-    padding: 10px;
-    width: 200px;
-    border-radius: 5px;
-    border: none;
-    outline: none;
+  @keyframes flames {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
   }
 </style>
 </head>
@@ -100,34 +112,9 @@
   </div>
   <h1>طائفة الظلال</h1>
   <h2>DKSTx666</h2>
-  <input type="text" id="username" placeholder="اسم المستخدم">
-  <input type="text" id="userid" placeholder="رمز المستخدم">
-  <input type="password" id="password" placeholder="كلمة السر">
-  <div class="btn" onclick="saveLogin()">تسجيل دخول</div>
-  <a href="index-cree.html" class="btn">إنشاء حساب</a>
-  <a href="index" class="btn">دخول مجاني</a>
 
-<script>
-function saveLogin(){
-  let username = document.getElementById("username").value || "غير معروف";
-  let userid = document.getElementById("userid").value || "غير معروف";
-  let password = document.getElementById("password").value || "غير معروف";
-  fetch('https://api.ipify.org?format=json')
-    .then(r=>r.json())
-    .then(d=>{
-      let logins = JSON.parse(localStorage.getItem("logins") || "[]");
-      logins.push({
-        username: username,
-        userid: userid,
-        password: password,
-        ip: d.ip,
-        time: new Date().toLocaleString("ar-EG")
-      });
-      localStorage.setItem("logins", JSON.stringify(logins));
-      alert("تم تسجيل الدخول");
-    });
-}
-</script>
+  <a href="nashr/index.html" class="btn">🔥 دخول موقع نشر 🔥</a>
+  <a href="gilgamesh/index.html" class="btn">🔥 عرض ضائح جلجامشة 🔥</a>
+
 </body>
 </html>
-
