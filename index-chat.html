@@ -1,10 +1,104 @@
-/* دالة مراسلة تشبه فيسبوك (محلية تعمل بالمتصفح عبر localStorage فقط) */
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>دردشة محلية شبيهة بالفيسبوك</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #1877f2;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    #chat-container {
+      flex: 1;
+      display: flex;
+      padding: 10px;
+      gap: 10px;
+    }
+    #threads {
+      width: 200px;
+      background: white;
+      border: 1px solid #ccc;
+      overflow-y: auto;
+    }
+    #messages {
+      flex: 1;
+      background: white;
+      border: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    #message-list {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    #send-box {
+      display: flex;
+      padding: 5px;
+      border-top: 1px solid #ccc;
+    }
+    #send-box input {
+      flex: 1;
+      padding: 5px;
+    }
+    #send-box button {
+      padding: 5px 10px;
+      background: #1877f2;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .message {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-radius: 5px;
+    }
+    .mine {
+      background: #d1e7ff;
+      align-self: flex-end;
+    }
+    .theirs {
+      background: #e4e6eb;
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body>
+
+<header>دردشة محلية</header>
+
+<div id="chat-container">
+  <div id="threads"></div>
+  <div id="messages">
+    <div id="message-list"></div>
+    <div id="send-box">
+      <input type="text" id="msgInput" placeholder="اكتب رسالة...">
+      <button id="sendBtn">إرسال</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== الكود الذي أرسلته ====== */
 (function (root) {
   const STORE_KEY_USERS   = "fb_like_users";
   const STORE_KEY_THREADS = "fb_like_threads";
   const STORE_KEY_MSGS    = "fb_like_messages";
   const STORE_KEY_SELF    = "fb_like_self";
-  const EMIT_DELAY = 0; // ms
+  const EMIT_DELAY = 0;
 
   const genId = (p="id") => `${p}_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
 
@@ -27,12 +121,10 @@
       this.self = read(STORE_KEY_SELF, null);
       this.users = read(STORE_KEY_USERS, []);
       this.threads = read(STORE_KEY_THREADS, []);
-      this.messages = read(STORE_KEY_MSGS, {}); // {threadId: Message[]}
+      this.messages = read(STORE_KEY_MSGS, {});
     }
 
-    /* ====== حساب المستخدم ====== */
     setSelf(user){ 
-      // user = {id, name, avatar}
       this.self = user; 
       write(STORE_KEY_SELF, user);
       if (!this.users.find(u=>u.id===user.id)){
@@ -57,7 +149,6 @@
       return this.users.filter(u=>!s || u.name.toLowerCase().includes(s)); 
     }
 
-    /* ====== المحادثات (خاص + مجموعات) ====== */
     createThread({type="dm", members=[], name="", avatar=""}){
       if (type==="dm" && members.length!==2) throw new Error("محادثة خاصة تحتاج عضوين فقط");
       const id = genId("thread");
@@ -95,7 +186,6 @@
       return t.members;
     }
 
-    /* ====== الرسائل ====== */
     sendMessage({threadId, text="", attachments=[]}){
       if(!this.self) throw new Error("لا يوجد مستخدم مسجل");
       const t=this.getThread(threadId); if(!t) throw new Error("محادثة غير موجودة");
@@ -104,9 +194,9 @@
         threadId,
         from: this.self.id,
         text,
-        attachments: attachments.map(a=>({ id: genId("att"), kind:a.kind, src:a.src, name:a.name||"" })), // kind: "image"|"video"|"gif"|"file"
-        reactions: {}, // emoji -> [userIds]
-        reads: [], // userIds
+        attachments: attachments.map(a=>({ id: genId("att"), kind:a.kind, src:a.src, name:a.name||"" })),
+        reactions: {},
+        reads: [],
         createdAt: Date.now()
       };
       (this.messages[threadId] ||= []).push(m);
@@ -150,15 +240,13 @@
       return true;
     }
 
-    /* ====== حالة الكتابة و آخر ظهور ====== */
     setTyping(threadId, userId, typing=true){
       this.em.emit("typing", {threadId, userId, typing});
     }
-    setPresence(userId, status="online"){ // "online"|"offline"
+    setPresence(userId, status="online"){
       this.em.emit("presence", {userId, status, at:Date.now()});
     }
 
-    /* ====== أدوات ====== */
     threadForDM(a,b){
       const ids = [a,b].sort().join("_");
       let t = this.threads.find(t=>t.type==="dm" && new Set(t.members).size===2 && t.members.sort().join("_")===ids);
@@ -171,25 +259,20 @@
       this.em.emit("reset", true);
     }
 
-    /* ====== أحداث ====== */
     on(ev, fn){ return this.em.on(ev, fn); }
     off(ev, fn){ return this.em.off(ev, fn); }
   }
 
   const api = new ChatCore();
 
-  /* واجهة عامة مبسطة */
   const ChatAPI = {
     on: (...a)=>api.on(...a),
     off: (...a)=>api.off(...a),
-
     setSelf: (u)=>api.setSelf(u),
     getSelf: ()=>api.getSelf(),
-
     addUser: (u)=>api.addUser(u),
     getUser: (id)=>api.getUser(id),
     listUsers: (q)=>api.listUsers(q),
-
     createThread: (opts)=>api.createThread(opts),
     listThreads: ()=>api.listThreads(),
     getThread: (id)=>api.getThread(id),
@@ -197,27 +280,50 @@
     addMembers: (id, ids)=>api.addMembers(id, ids),
     removeMember: (id, uid)=>api.removeMember(id, uid),
     threadForDM: (a,b)=>api.threadForDM(a,b),
-
     sendMessage: (payload)=>api.sendMessage(payload),
     getMessages: (threadId, limit)=>api.getMessages(threadId, limit),
     react: (mid, tid, emoji, uid)=>api.react(mid, tid, emoji, uid),
     unreact: (mid, tid, emoji, uid)=>api.unreact(mid, tid, emoji, uid),
     markRead: (tid, mid, uid)=>api.markRead(tid, mid, uid),
     deleteMessage: (tid, mid)=>api.deleteMessage(tid, mid),
-
     setTyping: (tid, uid, t)=>api.setTyping(tid, uid, t),
     setPresence: (uid, st)=>api.setPresence(uid, st),
-
     clearAll: ()=>api.clearAll()
   };
 
   root.FBLikeChat = ChatAPI;
 })(window);
 
-/* مثال تهيئة سريع (يمكن حذف هذا الجزء إن أردت)
-window.FBLikeChat.setSelf({id:"me_1", name:"أنا", avatar:"me.png"});
-window.FBLikeChat.addUser({id:"u_2", name:"Shadow", avatar:"shadow.png"});
-const t = FBLikeChat.threadForDM("me_1","u_2");
-FBLikeChat.sendMessage({threadId:t.id, text:"مرحبا", attachments:[]});
-*/
+/* ====== مثال للتشغيل ====== */
+FBLikeChat.setSelf({id:"me_1", name:"أنا", avatar:"me.png"});
+FBLikeChat.addUser({id:"u_2", name:"Shadow", avatar:"shadow.png"});
+const thread = FBLikeChat.threadForDM("me_1","u_2");
 
+/* تحديث قائمة الرسائل */
+function renderMessages(){
+  const msgs = FBLikeChat.getMessages(thread.id);
+  const container = document.getElementById("message-list");
+  container.innerHTML = "";
+  msgs.forEach(m=>{
+    const div = document.createElement("div");
+    div.className = "message " + (m.from==="me_1"?"mine":"theirs");
+    div.textContent = m.text;
+    container.appendChild(div);
+  });
+}
+renderMessages();
+
+/* إرسال رسالة */
+document.getElementById("sendBtn").onclick = ()=>{
+  const text = document.getElementById("msgInput").value.trim();
+  if(text){
+    FBLikeChat.sendMessage({threadId:thread.id, text});
+    document.getElementById("msgInput").value = "";
+    renderMessages();
+  }
+};
+
+</script>
+
+</body>
+</html>
