@@ -1,0 +1,179 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الصفحة الرئيسية</title>
+<style>
+  body {
+    background: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+  }
+  header {
+    display: flex;
+    justify-content: space-around;
+    background: #222;
+    padding: 10px;
+  }
+  header button {
+    background: red;
+    border: none;
+    padding: 10px;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  header button:hover {
+    background: darkred;
+  }
+  .posts {
+    padding: 10px;
+  }
+  .post {
+    background: rgba(255,255,255,0.05);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+  }
+  .post img, .post video {
+    max-width: 100%;
+    border-radius: 5px;
+    margin-top: 5px;
+  }
+  .reactions button {
+    font-size: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin: 5px;
+  }
+  .comments {
+    margin-top: 10px;
+  }
+  .comments img {
+    max-width: 100px;
+    border-radius: 5px;
+  }
+  .comment-input {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+  }
+  .comment-input input {
+    flex: 1;
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+  }
+  .comment-input button {
+    background: red;
+    border: none;
+    padding: 5px 10px;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button onclick="showSection('posts')">📜 واجهة المنشورات</button>
+  <button onclick="alert('📩 الدردشة الخاصة لم تُبرمج بعد')">💬 الدردشة الخاصة</button>
+  <button onclick="alert('👥 إنشاء دردشة جماعية لم تُبرمج بعد')">➕ إنشاء دردشة جماعية</button>
+  <button onclick="logout()">🚪 تسجيل خروج</button>
+</header>
+
+<div id="content">
+  <div class="posts" id="posts-section"></div>
+</div>
+
+<script>
+const postsData = [
+  {
+    id: 1,
+    author: "Shadow King",
+    type: "image",
+    src: "https://placekitten.com/400/300",
+    reactions: { "😆": 0, "💖": 0, "😡": 0, "😮": 0, "🥵": 0 },
+    comments: []
+  },
+  {
+    id: 2,
+    author: "Dark Goblin",
+    type: "video",
+    src: "https://www.w3schools.com/html/mov_bbb.mp4",
+    reactions: { "😆": 0, "💖": 0, "😡": 0, "😮": 0, "🥵": 0 },
+    comments: []
+  }
+];
+
+function showSection(section) {
+  if(section === 'posts') {
+    renderPosts();
+  }
+}
+
+function renderPosts(){
+  const container = document.getElementById("posts-section");
+  container.innerHTML = "";
+  postsData.forEach(post => {
+    let media = post.type === "image" ? 
+      `<img src="${post.src}">` : 
+      `<video src="${post.src}" controls></video>`;
+
+    let reactionsHTML = Object.keys(post.reactions).map(emoji => 
+      `<button onclick="react(${post.id}, '${emoji}')">${emoji} ${post.reactions[emoji]}</button>`
+    ).join("");
+
+    let commentsHTML = post.comments.map(c => 
+      `<p>💬 ${c}</p>`
+    ).join("");
+
+    container.innerHTML += `
+      <div class="post">
+        <b>${post.author}</b>
+        ${media}
+        <div class="reactions">${reactionsHTML}</div>
+        <div class="comments">
+          ${commentsHTML}
+          <div class="comment-input">
+            <input type="text" placeholder="أكتب تعليق أو ضع رابط صورة" id="comment-${post.id}">
+            <button onclick="addComment(${post.id})">نشر</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function react(postId, emoji){
+  let post = postsData.find(p => p.id === postId);
+  post.reactions[emoji]++;
+  renderPosts();
+}
+
+function addComment(postId){
+  let input = document.getElementById(`comment-${postId}`);
+  if(input.value.trim() !== ""){
+    postsData.find(p => p.id === postId).comments.push(input.value.trim());
+    input.value = "";
+    renderPosts();
+  }
+}
+
+function logout(){
+  localStorage.removeItem("newUser");
+  window.location.href = "index.html";
+}
+
+window.onload = () => {
+  renderPosts();
+};
+</script>
+
+</body>
+</html>
