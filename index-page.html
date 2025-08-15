@@ -1,222 +1,202 @@
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>موقع النشر</title>
+<title>تاريخ مملكة طائفة الظلال</title>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    direction: rtl;
-    background: linear-gradient(-45deg, purple, red, violet, purple);
-    background-size: 400% 400%;
-    animation: gradientShift 10s ease infinite;
-    color: white;
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  header {
-    text-align: center;
-    padding: 20px;
-  }
-  .btn {
-    background: rgba(0,0,0,0.8);
-    border: none;
-    padding: 10px 15px;
-    margin: 5px;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-  .btn:hover { background: rgba(255,0,0,0.7); }
-  #vip-status {
-    display: inline-block;
-    padding: 5px 15px;
-    border-radius: 20px;
-    background: gray;
-    margin: 10px;
-    transition: 0.3s;
-  }
-  #vip-status.active { background: gold; color: black; }
-  .posts {
-    display: flex;
-    flex-wrap: wrap-reverse; /* يجعل الجديد يطلع للأعلى */
-    gap: 10px;
-    padding: 20px;
-    justify-content: center;
-  }
-  .post {
-    background: rgba(0,0,0,0.5);
-    border-radius: 10px;
-    overflow: hidden;
-    padding: 5px;
-    width: 30%;
-    min-width: 200px;
-    animation: slideUp 0.5s ease;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .post img, .post video {
-    width: 100%;
-    border-radius: 8px;
-  }
-  .interactions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 5px;
-  }
-  .reaction-btn {
-    cursor: pointer;
-    margin: 0 2px;
-  }
-  .comments {
-    margin-top: 5px;
-    background: rgba(255,255,255,0.1);
-    padding: 5px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    max-height: 150px;
-    overflow-y: auto;
-  }
+    body {
+        background: #0a0a0a;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* العنوان الأحمر المتوهج */
+    h1 {
+        text-align: center;
+        font-size: 2.5em;
+        color: #ff1e1e;
+        text-shadow: 0 0 10px #ff3b3b, 0 0 20px #ff1e1e, 0 0 30px red;
+        padding: 20px 0;
+    }
+
+    /* شبكة الألبومات */
+    .album-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .album {
+        background: #1a1a1a;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        box-shadow: 0 0 10px rgba(255,0,0,0.3);
+    }
+
+    .album img {
+        width: 100%;
+        border-radius: 5px;
+        display: block;
+    }
+
+    .album p {
+        margin-top: 8px;
+        font-size: 0.9em;
+        color: #ccc;
+    }
+
+    /* الأزرار السفلية */
+    .bottom-buttons {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+    }
+
+    .btn {
+        background: #222;
+        border: none;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 1em;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(255,0,0,0.5);
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        background: #ff1e1e;
+    }
+
+    /* القائمة السوداء */
+    .blacklist {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 300px;
+        height: 100%;
+        background: rgba(10,10,10,0.95);
+        padding: 20px;
+        overflow-y: auto;
+        box-shadow: -5px 0 15px rgba(255,0,0,0.3);
+        transition: 0.5s;
+    }
+
+    .blacklist.active {
+        right: 0;
+    }
+
+    .blacklist h2 {
+        text-align: center;
+        color: #ff1e1e;
+        text-shadow: 0 0 10px #ff1e1e;
+        margin-bottom: 15px;
+    }
+
+    .person {
+        display: flex;
+        align-items: center;
+        background: #1a1a1a;
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(255,0,0,0.4);
+    }
+
+    .person img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 3px solid #ff1e1e;
+        margin-left: 10px;
+    }
+
+    .person span {
+        font-weight: bold;
+        color: white;
+        text-shadow: 0 0 5px #ff1e1e;
+    }
 </style>
 </head>
 <body>
 
-<header>
-  <button class="btn" onclick="registerUser()">تسجيل</button>
-  <button class="btn" onclick="createUser()">إنشاء</button>
-  <button class="btn" onclick="promptPost()">📷 نشر صور / 🎥 فيديو / GIF</button>
-  <span id="vip-status">VIP</span>
-  <button class="btn" onclick="vipLeft()">🔒 يسار</button>
-  <button class="btn" onclick="vipRight()">🔒 يمين</button>
-</header>
+<h1>تاريخ مملكة طائفة الظلال</h1>
 
-<div class="posts" id="posts"></div>
+<div class="album-grid" id="albumGrid"></div>
+
+<div class="bottom-buttons">
+    <button class="btn" id="blacklistBtn">ترسيم الظلال</button>
+    <button class="btn" onclick="alert('يمكن ربط هذا الزر بصفحة أخرى')">زر آخر</button>
+</div>
+
+<div class="blacklist" id="blacklistPanel">
+    <h2>ترسيم الظلال</h2>
+    <div id="blacklistContent"></div>
+</div>
 
 <script>
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
-let currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-let vipCodeLeft = "";
-let vipCodeRight = "";
-let vipActive = false;
-
-// تسجيل
-function registerUser(){
-  let name = prompt("اسم المستخدم:");
-  let img = prompt("رابط صورة المستخدم:");
-  if(name){
-    currentUser = {name: name, img: img || "https://via.placeholder.com/50", vip: false};
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-    alert("تم تسجيل الدخول");
-  }
-}
-
-// إنشاء حساب
-function createUser(){
-  alert("هنا يمكن وضع كود إنشاء حساب جديد مع تحقق كلمات سر إذا أردت");
-}
-
-// إدخال أكواد VIP
-function vipLeft(){
-  vipCodeLeft = prompt("أدخل كلمة سر يسار:");
-  checkVIP();
-}
-function vipRight(){
-  vipCodeRight = prompt("أدخل كلمة سر يمين:");
-  checkVIP();
-}
-function checkVIP(){
-  if(vipCodeLeft === "111" && vipCodeRight === "222"){
-    vipActive = true;
-    document.getElementById("vip-status").classList.add("active");
-    alert("VIP مفعّل ✅");
-  }
-}
-
-// نشر
-function promptPost(){
-  if(!vipActive){
-    alert("يجب أن تكون VIP للنشر أو الحذف");
-    return;
-  }
-  let type = prompt("اكتب: image أو video أو gif");
-  let url = prompt("ضع الرابط:");
-  if(url){
-    posts.push({type: type, url: url, user: currentUser, reactions: {}, comments: []});
-    localStorage.setItem("posts", JSON.stringify(posts));
-    renderPosts();
-  }
-}
-
-// تفاعل
-function reactToPost(index, emoji){
-  let post = posts[index];
-  if(!post.reactions[emoji]) post.reactions[emoji] = [];
-  if(!currentUser) return alert("سجّل دخول أولاً");
-  if(!post.reactions[emoji].includes(currentUser.name)){
-    post.reactions[emoji].push(currentUser.name);
-  }
-  localStorage.setItem("posts", JSON.stringify(posts));
-  renderPosts();
-}
-
-// تعليق
-function commentOnPost(index){
-  let text = prompt("اكتب تعليقك:");
-  if(!text) return;
-  if(text.includes("http") && !vipActive){
-    alert("إضافة صور بالتعليق تتطلب VIP");
-    return;
-  }
-  posts[index].comments.push({user: currentUser, text: text});
-  localStorage.setItem("posts", JSON.stringify(posts));
-  renderPosts();
-}
-
-// عرض
-function renderPosts(){
-  let container = document.getElementById("posts");
-  container.innerHTML = "";
-  posts.forEach((p,i)=>{
-    let div = document.createElement("div");
-    div.className = "post";
-    if(p.type === "image" || p.type === "gif"){
-      div.innerHTML = `<img src="${p.url}">`;
-    } else if(p.type === "video"){
-      div.innerHTML = `<video src="${p.url}" controls></video>`;
+    // بيانات الألبومات (مثال تجريبي)
+    const albums = [];
+    for (let i = 1; i <= 25; i++) {
+        albums.push({
+            images: Array.from({length: 10}, (_, j) => `https://picsum.photos/200?random=${i*10+j}`),
+            desc: `ألبوم رقم ${i}`
+        });
     }
-    div.innerHTML += `
-      <div class="interactions">
-        <div>
-          <span class="reaction-btn" onclick="reactToPost(${i},'💖')">💖</span>
-          <span class="reaction-btn" onclick="reactToPost(${i},'😮')">😮</span>
-          <span class="reaction-btn" onclick="reactToPost(${i},'😡')">😡</span>
-          <span class="reaction-btn" onclick="reactToPost(${i},'😫')">😫</span>
-          <span class="reaction-btn" onclick="reactToPost(${i},'🥵')">🥵</span>
-        </div>
-        <button class="btn" onclick="commentOnPost(${i})">💬 تعليق</button>
-      </div>
-      <div class="comments">
-        <strong>${p.user?.name || "مجهول"}</strong><br>
-        ${Object.entries(p.reactions).map(([emoji,users])=> `${emoji} ${users.length}`).join(" ")}
-        <hr>
-        ${p.comments.map(c=> `<div><img src="${c.user.img}" width="20" style="vertical-align:middle;border-radius:50%;"> <strong>${c.user.name}</strong>: ${c.text}</div>`).join("")}
-      </div>
-    `;
-    container.appendChild(div);
-  });
-}
 
-renderPosts();
+    function renderAlbums() {
+        const grid = document.getElementById("albumGrid");
+        albums.forEach(album => {
+            const div = document.createElement("div");
+            div.className = "album";
+            const img = document.createElement("img");
+            img.src = album.images[0];
+            const p = document.createElement("p");
+            p.textContent = album.desc;
+            div.appendChild(img);
+            div.appendChild(p);
+            grid.appendChild(div);
+        });
+    }
+
+    renderAlbums();
+
+    // القائمة السوداء
+    const blacklistBtn = document.getElementById("blacklistBtn");
+    const blacklistPanel = document.getElementById("blacklistPanel");
+    const blacklistContent = document.getElementById("blacklistContent");
+
+    const persons = [
+        {name: "ظل الصمت", img: "https://i.pravatar.cc/50?img=1"},
+        {name: "عين الليل", img: "https://i.pravatar.cc/50?img=2"},
+        {name: "السيف الأحمر", img: "https://i.pravatar.cc/50?img=3"}
+    ];
+
+    function renderBlacklist() {
+        blacklistContent.innerHTML = "";
+        persons.forEach(p => {
+            const div = document.createElement("div");
+            div.className = "person";
+            div.innerHTML = `<img src="${p.img}"><span>${p.name}</span>`;
+            blacklistContent.appendChild(div);
+        });
+    }
+
+    blacklistBtn.addEventListener("click", () => {
+        blacklistPanel.classList.toggle("active");
+        renderBlacklist();
+    });
 </script>
 </body>
 </html>
+
