@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>روبوت إضافة المحتوى</title>
+<style>
+    body { background: #111; color: white; font-family: Arial; padding: 20px; }
+    input, button { padding: 8px; margin: 5px 0; }
+    .section { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+
+<h1>إدارة موقع "تاريخ مملكة طائفة الظلال"</h1>
+
+<div class="section">
+    <h2>إضافة ألبوم</h2>
+    <input type="text" id="albumDesc" placeholder="وصف الألبوم">
+    <textarea id="albumImages" placeholder="روابط الصور (كل رابط بسطر)"></textarea>
+    <button onclick="addAlbum()">إضافة</button>
+</div>
+
+<div class="section">
+    <h2>إضافة شخص للقائمة السوداء</h2>
+    <input type="text" id="personName" placeholder="اسم الشخص">
+    <input type="text" id="personImg" placeholder="رابط الصورة">
+    <button onclick="addPerson()">إضافة</button>
+</div>
+
+<script>
+    function addAlbum() {
+        const desc = document.getElementById("albumDesc").value;
+        const imgs = document.getElementById("albumImages").value.split("\n").filter(x => x.trim());
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        albums.push({desc, images: imgs});
+        localStorage.setItem("albums", JSON.stringify(albums));
+        alert("تمت إضافة الألبوم!");
+    }
+
+    function addPerson() {
+        const name = document.getElementById("personName").value;
+        const img = document.getElementById("personImg").value;
+        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
+        persons.push({name, img});
+        localStorage.setItem("blacklist", JSON.stringify(persons));
+        alert("تمت إضافة الشخص للقائمة السوداء!");
+    }
+</script>
+</body>
+</html>
