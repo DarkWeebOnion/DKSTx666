@@ -4,96 +4,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>إنشاء حساب</title>
+<title>الحساب</title>
 <style>
   body {
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    background: black; color: white; font-family: Arial, sans-serif;
+    display: flex; justify-content: center; align-items: center; height: 100vh;
   }
-  .form-container {
-    background: rgba(255,255,255,0.05);
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
-    text-align: center;
+  .container {
+    width: 320px; text-align: center;
+    background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;
   }
-  input, select, textarea, button {
-    width: 100%;
-    margin: 8px 0;
-    padding: 8px;
-    border: none;
-    border-radius: 5px;
+  input, button {
+    width: 100%; margin: 8px 0; padding: 8px;
+    border: none; border-radius: 5px;
   }
-  input, select, textarea {
-    background: rgba(255,255,255,0.1);
-    color: white;
-  }
-  button {
-    background: red;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  button:hover {
-    background: darkred;
-  }
+  input {background: rgba(255,255,255,0.1); color: white;}
+  button {background: red; color: white; font-size: 16px; cursor: pointer;}
+  button:hover {background: darkred;}
+  img {width: 80px; height: 80px; border-radius: 50%; margin-top: 8px; display: none;}
+  .form {display: none; margin-top: 15px;}
 </style>
 </head>
 <body>
-  <div class="form-container">
-    <h2>إنشاء حساب</h2>
-    <label>تعيين صورة:</label>
-    <input type="file" id="avatar" accept="image/*">
+  <div class="container">
+    <h2>مرحباً بك</h2>
+    <button onclick="showForm('createForm')">إنشاء حساب</button>
+    <button onclick="showForm('loginForm')">تسجيل دخول</button>
 
-    <label>الاسم:</label>
-    <input type="text" id="name" placeholder="أدخل اسمك">
+    <!-- نموذج إنشاء -->
+    <div id="createForm" class="form">
+      <h3>إنشاء حساب</h3>
+      <input type="file" id="avatar" accept="image/*" onchange="previewImage(event)">
+      <img id="preview">
+      <input type="text" id="name" placeholder="أدخل اسمك">
+      <button onclick="createAccount()">إنشاء</button>
+    </div>
 
-    <label>اسم المستخدم:</label>
-    <input type="text" id="username" placeholder="Shadow_goblin">
-
-    <label>الجنس:</label>
-    <select id="gender">
-      <option value="">اختر الجنس</option>
-      <option value="ذكر">ذكر</option>
-      <option value="أنثى">أنثى</option>
-    </select>
-
-    <label>وصف المصدر (اختياري):</label>
-    <textarea id="desc" placeholder="اكتب وصفاً..."></textarea>
-
-    <button onclick="createAccount()">إنشاء حساب</button>
+    <!-- نموذج تسجيل -->
+    <div id="loginForm" class="form">
+      <h3>تسجيل دخول</h3>
+      <input type="text" id="username" placeholder="أدخل user">
+      <input type="number" id="id" placeholder="أدخل الرمز (8 أرقام)">
+      <button onclick="login()">تسجيل</button>
+    </div>
   </div>
 
 <script>
+function showForm(formId){
+  document.querySelectorAll('.form').forEach(f => f.style.display = 'none');
+  document.getElementById(formId).style.display = 'block';
+}
+
+function previewImage(event){
+  const file = event.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const preview = document.getElementById("preview");
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function generateId(){
+  return Math.floor(10000000 + Math.random() * 90000000); // 8 أرقام
+}
+
 function createAccount(){
   const avatar = document.getElementById("avatar").files[0];
   const name = document.getElementById("name").value.trim();
-  const username = document.getElementById("username").value.trim();
-  const gender = document.getElementById("gender").value;
-
-  if(!avatar || !name || !username || !gender){
-    alert("⚠ يرجى ملء جميع الحقول المطلوبة وتعيين صورة.");
-    return;
-  }
+  if(!avatar || !name){ alert("⚠ يرجى إدخال الاسم وتعيين صورة."); return; }
 
   const reader = new FileReader();
   reader.onload = function(e){
+    const id = generateId();
     const userData = {
-      avatar: e.target.result,
+      id: id,
+      username: "user" + id,
       name: name,
-      username: username,
-      gender: gender,
-      desc: document.getElementById("desc").value.trim()
+      avatar: e.target.result
     };
-    localStorage.setItem("newUser", JSON.stringify(userData));
-    window.location.href = "index-page.html";
+
+    let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+    accounts.push(userData);
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+
+    alert("✅ تم إنشاء الحساب!\nاسم المستخدم: " + userData.username + "\nالرمز: " + userData.id);
+    showForm('loginForm');
   };
   reader.readAsDataURL(avatar);
+}
+
+function login(){
+  const username = document.getElementById("username").value.trim();
+  const id = document.getElementById("id").value.trim();
+
+  let accounts = JSON.parse(localStorage.getItem("accounts")) || [];
+  const user = accounts.find(acc => acc.username === username && acc.id == id);
+
+  if(user){
+    localStorage.setItem("currentUser", JSON.stringify(user));
+    alert("✅ تسجيل ناجح! مرحباً " + user.name);
+    window.location.href = "index-page.html";
+  } else {
+    alert("❌ اسم المستخدم أو الرمز غير صحيح.");
+  }
 }
 </script>
 </body>
