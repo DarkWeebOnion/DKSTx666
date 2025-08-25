@@ -4,22 +4,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الأزرار</title>
+<title>مملكة طائفة الظلال</title>
 <style>
   body {
-    background: black;
+    margin: 0;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     min-height: 100vh;
     font-family: Arial, sans-serif;
+    gap: 20px;
+    background: url("gotcha-shadow.gif") no-repeat center center fixed;
+    background-size: cover;
+  }
+
+  /* العنوان */
+  h1 {
+    font-size: 36px;
+    font-weight: bold;
+    color: red;
+    margin-top: 30px;
+    text-align: center;
+    line-height: 1.5;
+    text-shadow: 0 0 15px black;
+    animation: titlePulse 2s infinite;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { color: red; text-shadow: 0 0 15px black; }
+    50% { color: black; text-shadow: 0 0 15px red; }
+  }
+
+  /* الأزرار */
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
+    padding: 20px;
   }
 
   .btn {
     position: relative;
-    width: 150px;
+    width: 180px;
     height: 60px;
     line-height: 60px;
     text-align: center;
@@ -30,6 +57,7 @@
     overflow: hidden;
     background: linear-gradient(135deg, #6a0dad, #9b30ff);
     text-shadow: 0 0 6px rgba(255,255,255,0.7);
+    animation: pulse 2s infinite;
     transition: transform 0.2s ease-in-out;
   }
 
@@ -37,49 +65,40 @@
     transform: scale(1.08);
   }
 
-  /* الهالة المتماوجة */
-  .btn::before {
-    content: "";
-    position: absolute;
-    top: -2px; left: -2px; right: -2px; bottom: -2px;
-    background: linear-gradient(45deg, violet, purple, magenta, violet);
-    background-size: 400% 400%;
-    border-radius: 14px;
-    z-index: -1;
-    filter: blur(10px);
-    animation: glow 6s linear infinite;
-  }
-
-  @keyframes glow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px #9b30ff, 0 0 20px #6a0dad; }
+    50% { box-shadow: 0 0 25px #9b30ff, 0 0 50px #6a0dad; }
   }
 </style>
 </head>
 <body>
 
+<!-- العنوان -->
+<h1>مملكة طائفة الظلال تضع فضائح لأشخاص محددين وليس عشوائيًا</h1>
+
 <!-- الأزرار -->
-<div class="btn" onclick="go('index-gilgamsha.html')">جلجامشة الوردية</div>
-<div class="btn" onclick="go('index.html')">زر 2</div>
-<div class="btn" onclick="go('index.html')">زر 3</div>
-<div class="btn" onclick="go('index.html')">زر 4</div>
-<div class="btn" onclick="go('index.html')">زر 5</div>
-<div class="btn" onclick="go('index.html')">زر 6</div>
-<div class="btn" onclick="go('index.html')">زر 7</div>
-<div class="btn" onclick="go('index.html')">زر 8</div>
-<div class="btn" onclick="go('index.html')">زر 9</div>
-<div class="btn" onclick="go('index.html')">زر 10</div>
-<div class="btn" onclick="go('index.html')">زر 11</div>
-<div class="btn" onclick="go('index.html')">زر 12</div>
-<div class="btn" onclick="go('index.html')">زر 13</div>
-<div class="btn" onclick="go('index.html')">زر 14</div>
-<div class="btn" onclick="go('index.html')">زر 15</div>
-<div class="btn" onclick="go('index.html')">زر 16</div>
-<div class="btn" onclick="go('index.html')">زر 17</div>
-<div class="btn" onclick="go('index.html')">زر 18</div>
-<div class="btn" onclick="go('index.html')">زر 19</div>
-<div class="btn" onclick="go('index.html')">زر 20</div>
+<div class="buttons">
+  <div class="btn" onclick="go('index-gilgamsha.html')">جلجامشة الوردية</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+  <div class="btn" onclick="go('index.html')">فارغ</div>
+</div>
 
 <script>
 function go(path){
