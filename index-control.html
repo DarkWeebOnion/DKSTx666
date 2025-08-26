@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم - مملكة الظلال</title>
+<style>
+    body {
+        background: #111;
+        color: white;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+    h1 { color: red; text-align: center; }
+    .section {
+        background: #222;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(255,0,0,0.5);
+    }
+    input, textarea, button {
+        width: 100%;
+        margin: 5px 0;
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+    }
+    button {
+        background: red;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .album, .person {
+        background: #333;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 8px;
+    }
+    .album img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 5px;
+    }
+    .actions {
+        margin-top: 8px;
+    }
+</style>
+</head>
+<body>
+
+<h1>لوحة التحكم</h1>
+
+<div class="section">
+    <h2>➕ إضافة ألبوم</h2>
+    <input type="text" id="albumDesc" placeholder="وصف الألبوم">
+    <textarea id="albumImages" placeholder="روابط الصور (كل رابط بسطر)"></textarea>
+    <button onclick="addAlbum()">إضافة</button>
+</div>
+
+<div class="section">
+    <h2>➕ إضافة شخص للقائمة السوداء</h2>
+    <input type="text" id="personName" placeholder="اسم الشخص">
+    <input type="text" id="personImg" placeholder="رابط الصورة">
+    <button onclick="addPerson()">إضافة</button>
+</div>
+
+<div class="section">
+    <h2>📂 إدارة الألبومات</h2>
+    <div id="albumsList"></div>
+</div>
+
+<div class="section">
+    <h2>👤 إدارة الأشخاص</h2>
+    <div id="personsList"></div>
+</div>
+
+<script>
+    function addAlbum() {
+        const desc = document.getElementById("albumDesc").value.trim();
+        const imgs = document.getElementById("albumImages").value.split("\n").filter(x => x.trim());
+        if (!desc || imgs.length === 0) { alert("يرجى إدخال الوصف والصور"); return; }
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        albums.push({desc, images: imgs});
+        localStorage.setItem("albums", JSON.stringify(albums));
+        loadAlbums();
+        alert("✅ تمت إضافة الألبوم!");
+    }
+
+    function addPerson() {
+        const name = document.getElementById("personName").value.trim();
+        const img = document.getElementById("personImg").value.trim();
+        if (!name || !img) { alert("يرجى إدخال الاسم والصورة"); return; }
+        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
+        persons.push({name, img});
+        localStorage.setItem("blacklist", JSON.stringify(persons));
+        loadPersons();
+        alert("✅ تمت إضافة الشخص!");
+    }
+
+    function loadAlbums() {
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        let container = document.getElementById("albumsList");
+        container.innerHTML = "";
+        albums.forEach((album, index) => {
+            let div = document.createElement("div");
+            div.className = "album";
+            div.innerHTML = `
+                <img src="${album.images[0]}" alt="">
+                <p><b>الوصف:</b> <input type="text" value="${album.desc}" id="desc-${index}"></p>
+                <p>📷 عدد الصور: ${album.images.length}</p>
+                <div class="actions">
+                    <button onclick="updateAlbum(${index})">✏ تعديل الوصف</button>
+                    <button onclick="deleteAlbum(${index})">🗑 حذف الألبوم</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function updateAlbum(index) {
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        let newDesc = document.getElementById(`desc-${index}`).value;
+        albums[index].desc = newDesc;
+        localStorage.setItem("albums", JSON.stringify(albums));
+        alert("✅ تم تعديل الوصف!");
+        loadAlbums();
+    }
+
+    function deleteAlbum(index) {
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        if (!confirm("هل أنت متأكد من حذف هذا الألبوم؟")) return;
+        albums.splice(index, 1);
+        localStorage.setItem("albums", JSON.stringify(albums));
+        loadAlbums();
+    }
+
+    function loadPersons() {
+        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
+        let container = document.getElementById("personsList");
+        container.innerHTML = "";
+        persons.forEach((p, index) => {
+            let div = document.createElement("div");
+            div.className = "person";
+            div.innerHTML = `
+                <p><img src="${p.img}" width="50" height="50" style="border-radius:50%;vertical-align:middle;"> 
+                <b>${p.name}</b></p>
+                <button onclick="deletePerson(${index})">🗑 حذف الشخص</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function deletePerson(index) {
+        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
+        if (!confirm("هل أنت متأكد من حذف هذا الشخص؟")) return;
+        persons.splice(index, 1);
+        localStorage.setItem("blacklist", JSON.stringify(persons));
+        loadPersons();
+    }
+
+    loadAlbums();
+    loadPersons();
+</script>
+
+</body>
+</html>
+
