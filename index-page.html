@@ -1,202 +1,50 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تاريخ مملكة طائفة الظلال</title>
+<title>روبوت إضافة المحتوى</title>
 <style>
-    body {
-        background: #0a0a0a;
-        color: white;
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-    }
-
-    /* العنوان الأحمر المتوهج */
-    h1 {
-        text-align: center;
-        font-size: 2.5em;
-        color: #ff1e1e;
-        text-shadow: 0 0 10px #ff3b3b, 0 0 20px #ff1e1e, 0 0 30px red;
-        padding: 20px 0;
-    }
-
-    /* شبكة الألبومات */
-    .album-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 15px;
-        padding: 20px;
-    }
-
-    .album {
-        background: #1a1a1a;
-        border-radius: 8px;
-        padding: 10px;
-        text-align: center;
-        box-shadow: 0 0 10px rgba(255,0,0,0.3);
-    }
-
-    .album img {
-        width: 100%;
-        border-radius: 5px;
-        display: block;
-    }
-
-    .album p {
-        margin-top: 8px;
-        font-size: 0.9em;
-        color: #ccc;
-    }
-
-    /* الأزرار السفلية */
-    .bottom-buttons {
-        position: fixed;
-        bottom: 20px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 20px;
-    }
-
-    .btn {
-        background: #222;
-        border: none;
-        color: white;
-        padding: 10px 15px;
-        border-radius: 6px;
-        font-size: 1em;
-        cursor: pointer;
-        box-shadow: 0 0 10px rgba(255,0,0,0.5);
-        transition: 0.3s;
-    }
-
-    .btn:hover {
-        background: #ff1e1e;
-    }
-
-    /* القائمة السوداء */
-    .blacklist {
-        position: fixed;
-        top: 0;
-        right: -400px;
-        width: 300px;
-        height: 100%;
-        background: rgba(10,10,10,0.95);
-        padding: 20px;
-        overflow-y: auto;
-        box-shadow: -5px 0 15px rgba(255,0,0,0.3);
-        transition: 0.5s;
-    }
-
-    .blacklist.active {
-        right: 0;
-    }
-
-    .blacklist h2 {
-        text-align: center;
-        color: #ff1e1e;
-        text-shadow: 0 0 10px #ff1e1e;
-        margin-bottom: 15px;
-    }
-
-    .person {
-        display: flex;
-        align-items: center;
-        background: #1a1a1a;
-        padding: 8px;
-        margin-bottom: 10px;
-        border-radius: 10px;
-        box-shadow: 0 0 8px rgba(255,0,0,0.4);
-    }
-
-    .person img {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: 3px solid #ff1e1e;
-        margin-left: 10px;
-    }
-
-    .person span {
-        font-weight: bold;
-        color: white;
-        text-shadow: 0 0 5px #ff1e1e;
-    }
+    body { background: #111; color: white; font-family: Arial; padding: 20px; }
+    input, button { padding: 8px; margin: 5px 0; }
+    .section { margin-bottom: 20px; }
 </style>
 </head>
 <body>
 
-<h1>تاريخ مملكة طائفة الظلال</h1>
+<h1>إدارة موقع "تاريخ مملكة طائفة الظلال"</h1>
 
-<div class="album-grid" id="albumGrid"></div>
-
-<div class="bottom-buttons">
-    <button class="btn" id="blacklistBtn">ترسيم الظلال</button>
-    <button class="btn" onclick="alert('يمكن ربط هذا الزر بصفحة أخرى')">زر آخر</button>
+<div class="section">
+    <h2>إضافة ألبوم</h2>
+    <input type="text" id="albumDesc" placeholder="وصف الألبوم">
+    <textarea id="albumImages" placeholder="روابط الصور (كل رابط بسطر)"></textarea>
+    <button onclick="addAlbum()">إضافة</button>
 </div>
 
-<div class="blacklist" id="blacklistPanel">
-    <h2>ترسيم الظلال</h2>
-    <div id="blacklistContent"></div>
+<div class="section">
+    <h2>إضافة شخص للقائمة السوداء</h2>
+    <input type="text" id="personName" placeholder="اسم الشخص">
+    <input type="text" id="personImg" placeholder="رابط الصورة">
+    <button onclick="addPerson()">إضافة</button>
 </div>
 
 <script>
-    // بيانات الألبومات (مثال تجريبي)
-    const albums = [];
-    for (let i = 1; i <= 25; i++) {
-        albums.push({
-            images: Array.from({length: 10}, (_, j) => `https://picsum.photos/200?random=${i*10+j}`),
-            desc: `ألبوم رقم ${i}`
-        });
+    function addAlbum() {
+        const desc = document.getElementById("albumDesc").value;
+        const imgs = document.getElementById("albumImages").value.split("\n").filter(x => x.trim());
+        let albums = JSON.parse(localStorage.getItem("albums") || "[]");
+        albums.push({desc, images: imgs});
+        localStorage.setItem("albums", JSON.stringify(albums));
+        alert("تمت إضافة الألبوم!");
     }
 
-    function renderAlbums() {
-        const grid = document.getElementById("albumGrid");
-        albums.forEach(album => {
-            const div = document.createElement("div");
-            div.className = "album";
-            const img = document.createElement("img");
-            img.src = album.images[0];
-            const p = document.createElement("p");
-            p.textContent = album.desc;
-            div.appendChild(img);
-            div.appendChild(p);
-            grid.appendChild(div);
-        });
+    function addPerson() {
+        const name = document.getElementById("personName").value;
+        const img = document.getElementById("personImg").value;
+        let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
+        persons.push({name, img});
+        localStorage.setItem("blacklist", JSON.stringify(persons));
+        alert("تمت إضافة الشخص للقائمة السوداء!");
     }
-
-    renderAlbums();
-
-    // القائمة السوداء
-    const blacklistBtn = document.getElementById("blacklistBtn");
-    const blacklistPanel = document.getElementById("blacklistPanel");
-    const blacklistContent = document.getElementById("blacklistContent");
-
-    const persons = [
-        {name: "ظل الصمت", img: "https://i.pravatar.cc/50?img=1"},
-        {name: "عين الليل", img: "https://i.pravatar.cc/50?img=2"},
-        {name: "السيف الأحمر", img: "https://i.pravatar.cc/50?img=3"}
-    ];
-
-    function renderBlacklist() {
-        blacklistContent.innerHTML = "";
-        persons.forEach(p => {
-            const div = document.createElement("div");
-            div.className = "person";
-            div.innerHTML = `<img src="${p.img}"><span>${p.name}</span>`;
-            blacklistContent.appendChild(div);
-        });
-    }
-
-    blacklistBtn.addEventListener("click", () => {
-        blacklistPanel.classList.toggle("active");
-        renderBlacklist();
-    });
 </script>
 </body>
 </html>
-
