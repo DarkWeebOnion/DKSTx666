@@ -1,50 +1,176 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>روبوت إضافة المحتوى</title>
+<title>تاريخ مملكة طائفة الظلال</title>
 <style>
-    body { background: #111; color: white; font-family: Arial; padding: 20px; }
-    input, button { padding: 8px; margin: 5px 0; }
-    .section { margin-bottom: 20px; }
+    body {
+        background: #000;
+        color: white;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        text-align: center;
+        color: red;
+        text-shadow: 0 0 10px red, 0 0 20px crimson;
+        padding: 20px;
+    }
+    .top-bar {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .top-bar button {
+        background: crimson;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    .top-bar button:hover {
+        background: darkred;
+    }
+    .albums, .blacklist {
+        padding: 20px;
+    }
+    .album {
+        background: #111;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        box-shadow: 0 0 10px rgba(255,0,0,0.4);
+    }
+    .album h3 {
+        color: crimson;
+        margin-top: 0;
+    }
+    .album-images {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+    }
+    .album-images img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        transition: transform 0.3s;
+    }
+    .album-images img:hover {
+        transform: scale(1.05);
+    }
+    .blacklist {
+        background: #111;
+        margin-top: 30px;
+        padding: 20px;
+        border-top: 2px solid crimson;
+    }
+    .person {
+        display: flex;
+        align-items: center;
+        background: #222;
+        padding: 10px;
+        border-radius: 8px;
+        margin: 8px 0;
+    }
+    .person img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin-left: 10px;
+        border: 2px solid crimson;
+    }
+    .person span {
+        font-size: 1.1em;
+    }
 </style>
 </head>
 <body>
 
-<h1>إدارة موقع "تاريخ مملكة طائفة الظلال"</h1>
+<h1>📜 تاريخ مملكة طائفة الظلال</h1>
 
-<div class="section">
-    <h2>إضافة ألبوم</h2>
-    <input type="text" id="albumDesc" placeholder="وصف الألبوم">
-    <textarea id="albumImages" placeholder="روابط الصور (كل رابط بسطر)"></textarea>
-    <button onclick="addAlbum()">إضافة</button>
+<div class="top-bar">
+    <button onclick="refreshData()">🔄 تحديث البيانات</button>
 </div>
 
-<div class="section">
-    <h2>إضافة شخص للقائمة السوداء</h2>
-    <input type="text" id="personName" placeholder="اسم الشخص">
-    <input type="text" id="personImg" placeholder="رابط الصورة">
-    <button onclick="addPerson()">إضافة</button>
+<div class="albums">
+    <h2>📂 الألبومات</h2>
+    <div id="albumsContainer"></div>
+</div>
+
+<div class="blacklist">
+    <h2>🚫 القائمة السوداء</h2>
+    <div id="blacklistContainer"></div>
 </div>
 
 <script>
-    function addAlbum() {
-        const desc = document.getElementById("albumDesc").value;
-        const imgs = document.getElementById("albumImages").value.split("\n").filter(x => x.trim());
+    // تحميل الألبومات
+    function loadAlbums() {
         let albums = JSON.parse(localStorage.getItem("albums") || "[]");
-        albums.push({desc, images: imgs});
-        localStorage.setItem("albums", JSON.stringify(albums));
-        alert("تمت إضافة الألبوم!");
+        const container = document.getElementById("albumsContainer");
+        container.innerHTML = "";
+
+        if (albums.length === 0) {
+            container.innerHTML = "<p>لا توجد ألبومات حالياً</p>";
+            return;
+        }
+
+        albums.forEach((album) => {
+            let albumDiv = document.createElement("div");
+            albumDiv.className = "album";
+
+            let count = album.images.length;
+
+            albumDiv.innerHTML = `
+                <h3>📖 ${album.desc}</h3>
+                <p>عدد الصور: <strong>${count}</strong></p>
+                <div class="album-images">
+                    ${album.images.map(img => `<img src="${img}" alt="صورة">`).join("")}
+                </div>
+            `;
+
+            container.appendChild(albumDiv);
+        });
     }
 
-    function addPerson() {
-        const name = document.getElementById("personName").value;
-        const img = document.getElementById("personImg").value;
+    // تحميل الأشخاص
+    function loadBlacklist() {
         let persons = JSON.parse(localStorage.getItem("blacklist") || "[]");
-        persons.push({name, img});
-        localStorage.setItem("blacklist", JSON.stringify(persons));
-        alert("تمت إضافة الشخص للقائمة السوداء!");
+        const container = document.getElementById("blacklistContainer");
+        container.innerHTML = "";
+
+        if (persons.length === 0) {
+            container.innerHTML = "<p>لا توجد أسماء في القائمة السوداء</p>";
+            return;
+        }
+
+        persons.forEach(person => {
+            let div = document.createElement("div");
+            div.className = "person";
+            div.innerHTML = `
+                <img src="${person.img}" alt="صورة">
+                <span>${person.name}</span>
+            `;
+            container.appendChild(div);
+        });
     }
+
+    // تحديث البيانات (الألبومات + الأشخاص)
+    function refreshData() {
+        loadAlbums();
+        loadBlacklist();
+    }
+
+    // تشغيل عند فتح الصفحة
+    refreshData();
 </script>
+
 </body>
 </html>
+
