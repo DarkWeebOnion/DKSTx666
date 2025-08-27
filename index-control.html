@@ -1,427 +1,220 @@
-</script>
-
-/* ===== البيانات ===== */
-let posts = JSON.parse(localStorage.getItem("posts")) || [];
-let albums = JSON.parse(localStorage.getItem("albums")) || [];
-let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-let isVIP = localStorage.getItem("vip") === "true";
-
-/* ===== المنشورات ===== */
-function renderPosts(){
-  const container = document.getElementById("posts");
-  container.innerHTML = "";
-  posts.slice().reverse().forEach((p,idx)=>{
-    const div = document.createElement("div");
-    div.className="post";
-    div.innerHTML=`<p>${p.text}</p>`;
-    if(isVIP){
-      const actions = document.createElement("div");
-      actions.className="actions";
-      actions.innerHTML=`<button onclick="editPost(${idx})">✏️ تعديل</button>
-                         <button onclick="deletePost(${idx})">🗑️ حذف</button>`;
-      div.appendChild(actions);
-    }
-    container.appendChild(div);
-  });
-}
-function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
-function editPost(idx){
-  let newText=prompt("تعديل النص:",posts[idx].text);
-  if(newText!==null){ posts[idx].text=newText; savePosts(); renderPosts(); }
-}
-function deletePost(idx){
-  if(confirm("حذف المنشور؟")){ posts.splice(idx,1); savePosts(); renderPosts(); }
-}
-document.getElementById("postBtn").onclick = () => {
-  const text = document.getElementById("postText").value;
-  if(!text) return;
-  posts.push({text});
-  savePosts();
-  renderPosts();
-  document.getElementById("postText").value="";
-};
-renderPosts();
-
-/* ===== الألبومات ===== */
-function renderAlbums(){
-  const container = document.getElementById("albums");
-  container.innerHTML="";
-  albums.forEach((a,i)=>{
-    const div = document.createElement("div");
-    div.className="album";
-    div.innerHTML=`${a.name || "صورة جديدة"}`;
-    if(isVIP){
-      const actions = document.createElement("div");
-      actions.className="actions";
-      actions.innerHTML=`<button onclick="deleteAlbum(${i})">🗑️ حذف</button>`;
-      div.appendChild(actions);
-    }
-    div.onclick = () => openGallery(i);
-    container.appendChild(div);
-  });
-}
-function saveAlbums(){ localStorage.setItem("albums",JSON.stringify(albums)); }
-function deleteAlbum(i){
-  if(confirm("حذف الألبوم؟")){ albums.splice(i,1); saveAlbums(); renderAlbums(); }
-}
-document.getElementById("uploadImage").onchange = function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    albums.push({name:"صورة جديدة", images:[reader.result]});
-    saveAlbums(); renderAlbums();
-  };
-  reader.readAsDataURL(file);
-};
-renderAlbums();
-
-/* ===== المعرض ===== */
-let currentAlbum = null, currentIndex=0;
-function openGallery(i){
-  currentAlbum = albums[i]; currentIndex=0;
-  document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
-  document.getElementById("gallery").style.display="flex";
-}
-function showImage(idx){
-  if(!currentAlbum) return;
-  currentIndex = (idx + currentAlbum.images.length) % currentAlbum.images.length;
-  document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
-}
-document.getElementById("prevImg").onclick = ()=>showImage(currentIndex-1);
-document.getElementById("nextImg").onclick = ()=>showImage(currentIndex+1);
-document.getElementById("closeGallery").onclick = ()=>document.getElementById("gallery").style.display="none";
-
-/* ===== VIP ===== */
-if(isVIP) document.getElementById("postArea").classList.remove("disabled");
-document.getElementById("vipBtn").onclick = ()=>{
-  let attempts=0;
-  function ask(){
-    let pass=prompt("ادخل كلمة السر:");
-    if(pass==="135791"){
-      attempts++;
-      if(attempts<10){ alert("كلمة سر غير صحيحة ❌"); ask(); } 
-      else {
-        isVIP=true;
-        localStorage.setItem("vip","true");
-        document.getElementById("postArea").classList.remove("disabled");
-        renderPosts(); renderAlbums();
-        alert("🎉 أصبحت VIP");
-      }
-    } else { alert("كلمة سر غير صحيحة ❌"); ask(); }
-  }
-  ask();
-};
-
-/* ===== الترسيمات ===== */
-const overlay = document.getElementById("overlay");
-const profileList = document.getElementById("profiles");
-
-function renderProfiles(){
-  profileList.innerHTML="";
-  if(profiles.length===0){
-    for(let i=0;i<9;i++){
-      const div=document.createElement("div");
-      div.className="profile-card";
-      profileList.appendChild(div);
-    }
-  } else {
-    profiles.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="profile-card";
-      div.innerHTML=`<img src="${p.image}"><span>${p.name}</span>`;
-      profileList.appendChild(div);
-    });
-  }
-}
-renderProfiles();
-
-document.getElementById("settingsBtn").onclick = ()=>overlay.style.display="flex";
-document.getElementById("closeOverlay").onclick = ()=>overlay.style.display="none";
-
-document.getElementById("addProfile").onclick = ()=>{
-  const name = document.getElementById("profileName").value;
-  const file = document.getElementById("profileImage").files[0];
-  if(!name || !file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    profiles.push({name,image:reader.result});
-    localStorage.setItem("profiles",JSON.stringify(profiles));
-    renderProfiles();
-  };
-  reader.readAsDataURL(file);
-  document.getElementById("profileName").value="";
-  document.getElementById("profileImage").value="";
-};
-
-document.getElementById("clearProfiles").onclick = ()=>{
-  if(confirm("مسح كل الترسيمات؟")){
-    profiles=[];
-    localStorage.setItem("profiles",JSON.stringify(profiles));
-    renderProfiles();
-  }
-};
-
-/* ===== الوضع الليلي/نهاري ===== */
-let dark = true;
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="m"){ dark=!dark; document.body.classList.toggle("light-mode",!dark); }
-});
 
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مملكة طائفة الظلال</title>
-<style>
-/* ===== عام ===== */
-body { margin:0; font-family:sans-serif; background:#111; color:#fff; }
-header { padding:15px; background:#900; text-align:center; font-size:24px; text-shadow:0 0 10px #f00; }
-#controls { padding:10px; text-align:center; }
-button { padding:8px 15px; margin:5px; border:none; border-radius:8px; cursor:pointer; }
-textarea { width:90%; margin:10px auto; display:block; padding:10px; border-radius:8px; }
-input[type="file"] { margin:10px auto; display:block; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منشورات وصور</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #222;
+      padding: 10px;
+      text-align: center;
+    }
+    #postArea {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+    }
+    #postText {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      width: 100%;
+    }
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      background: crimson;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.8; }
 
-/* ===== المنشورات النصية ===== */
-#posts { padding:10px; max-width:700px; margin:auto; }
-.post { background:#222; padding:10px; margin:10px 0; border-radius:10px; box-shadow:0 0 5px #444; position:relative; }
-.post .actions { margin-top:5px; text-align:right; }
+    #posts {
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .post {
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .actions { margin-top: 6px; }
+    .actions button { margin-right: 6px; }
 
-/* ===== الألبومات للصور ===== */
-#albums { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:10px; max-width:900px; margin:auto; }
-.album { background:#333; border-radius:10px; height:150px; display:flex; justify-content:center; align-items:center; position:relative; cursor:pointer; }
-.album .actions { position:absolute; bottom:5px; width:100%; text-align:center; font-size:12px; }
-
-/* ===== المعرض ===== */
-#gallery { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); display:none; flex-direction:column; justify-content:center; align-items:center; }
-#gallery img { max-width:80%; max-height:70%; margin:10px; border-radius:10px; }
-#gallery button { margin:5px; }
-
-/* ===== الترسيمات ===== */
-#profiles { padding:10px; max-width:700px; margin:auto; display:flex; flex-wrap:wrap; gap:10px; }
-.profile-card { display:flex; justify-content:center; align-items:center; background:#333; padding:10px; border-radius:8px; width:100px; height:100px; }
-.profile-card img { width:60px; height:60px; border-radius:50%; }
-
-/* ===== الوضع الليلي/نهاري ===== */
-.light-mode { background:#f4f4f4; color:#111; }
-.light-mode header { background:#ccc; color:#111; text-shadow:none; }
-
-/* ===== نافذة الترسيم ===== */
-.overlay-box { background:#222; padding:20px; border-radius:12px; width:300px; margin:auto; }
-</style>
+    #albums {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 10px;
+    }
+    .album {
+      background: #333;
+      padding: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #gallery {
+      display: none;
+      position: fixed;
+      top:0;left:0;right:0;bottom:0;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    #gallery img { max-width: 80%; max-height: 80%; }
+    #gallery button { margin: 10px; }
+    .light-mode {
+      background: #eee;
+      color: #000;
+    }
+    .light-mode .post { background:#ddd; }
+  </style>
 </head>
 <body>
-<header>📜 مملكة طائفة الظلال 📜</header>
+  <header>
+    <h1>📜 صفحة المنشورات والصور</h1>
+    <button id="vipBtn">تفعيل VIP</button>
+  </header>
 
-<div id="controls">
-  <button id="vipBtn">✨ تفعيل VIP</button>
-  <button id="settingsBtn">⚙️ قائمة الترسيم</button>
-  <input type="file" id="uploadImage" accept="image/*" style="display:inline-block;">
-</div>
-
-<div id="postArea">
-  <textarea id="postText" placeholder="اكتب منشورك..."></textarea>
-  <button id="postBtn">نشر النص</button>
-</div>
-<div id="posts"></div>
-
-<h3 style="padding:10px;text-align:center;">📂 الألبومات</h3>
-<div id="albums"></div>
-
-<h3 style="padding:10px;text-align:center;">👥 الترسيمات</h3>
-<div id="profiles"></div>
-
-<div id="gallery">
-  <button id="closeGallery">إغلاق</button>
-  <img id="galleryImg">
-  <div>
-    <button id="prevImg">⬅️</button>
-    <button id="nextImg">➡️</button>
-    <button id="downloadAlbum">⬇️ تحميل الألبوم</button>
+  <!-- منطقة النشر -->
+  <div id="postArea" class="disabled">
+    <textarea id="postText" placeholder="اكتب منشورك هنا..."></textarea>
+    <button id="postBtn">نشر منشور</button>
+    <input type="file" id="uploadImage" accept="image/*">
   </div>
-</div>
 
-<div id="overlay" style="display:none;">
-  <div class="overlay-box">
-    <h3>قائمة الترسيم 💀</h3>
-    <input type="text" id="profileName" placeholder="اسم المستخدم"><br>
-    <input type="file" id="profileImage" accept="image/*"><br>
-    <button id="addProfile">➕ إضافة</button>
-    <button id="clearProfiles">🗑️ مسح الكل</button>
-    <button id="closeOverlay">إغلاق</button>
+  <!-- المنشورات -->
+  <div id="posts"></div>
+
+  <!-- الألبومات -->
+  <h2 style="padding:10px;">📷 الصور</h2>
+  <div id="albums"></div>
+
+  <!-- المعرض -->
+  <div id="gallery">
+    <button id="closeGallery">❌ إغلاق</button>
+    <img id="galleryImg" src="">
+    <div>
+      <button id="prevImg">⬅️ السابق</button>
+      <button id="nextImg">➡️ التالي</button>
+    </div>
   </div>
-</div>
-</script>
 
-/* ===== البيانات ===== */
-let posts = JSON.parse(localStorage.getItem("posts")) || [];
-let albums = JSON.parse(localStorage.getItem("albums")) || [];
-let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
-let isVIP = localStorage.getItem("vip") === "true";
+  <script>
+    /* ===== البيانات ===== */
+    let posts = JSON.parse(localStorage.getItem("posts")) || [];
+    let albums = JSON.parse(localStorage.getItem("albums")) || [];
+    let isVIP = localStorage.getItem("vip") === "true";
 
-/* ===== المنشورات ===== */
-function renderPosts(){
-  const container = document.getElementById("posts");
-  container.innerHTML = "";
-  posts.slice().reverse().forEach((p,idx)=>{
-    const div = document.createElement("div");
-    div.className="post";
-    div.innerHTML=`<p>${p.text}</p>`;
-    if(isVIP){
-      const actions = document.createElement("div");
-      actions.className="actions";
-      actions.innerHTML=`<button onclick="editPost(${idx})">✏️ تعديل</button>
-                         <button onclick="deletePost(${idx})">🗑️ حذف</button>`;
-      div.appendChild(actions);
+    /* ===== المنشورات ===== */
+    function renderPosts(){
+      const container = document.getElementById("posts");
+      container.innerHTML = "";
+      posts.slice().reverse().forEach((p,idx)=>{
+        const div = document.createElement("div");
+        div.className="post";
+        div.innerHTML=`<p>${p.text}</p>`;
+        if(isVIP){
+          const actions = document.createElement("div");
+          actions.className="actions";
+          actions.innerHTML=`<button onclick="editPost(${idx})">✏️ تعديل</button>
+                             <button onclick="deletePost(${idx})">🗑️ حذف</button>`;
+          div.appendChild(actions);
+        }
+        container.appendChild(div);
+      });
     }
-    container.appendChild(div);
-  });
-}
-function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
-function editPost(idx){
-  let newText=prompt("تعديل النص:",posts[idx].text);
-  if(newText!==null){ posts[idx].text=newText; savePosts(); renderPosts(); }
-}
-function deletePost(idx){
-  if(confirm("حذف المنشور؟")){ posts.splice(idx,1); savePosts(); renderPosts(); }
-}
-document.getElementById("postBtn").onclick = () => {
-  const text = document.getElementById("postText").value;
-  if(!text) return;
-  posts.push({text});
-  savePosts();
-  renderPosts();
-  document.getElementById("postText").value="";
-};
-renderPosts();
-
-/* ===== الألبومات ===== */
-function renderAlbums(){
-  const container = document.getElementById("albums");
-  container.innerHTML="";
-  albums.forEach((a,i)=>{
-    const div = document.createElement("div");
-    div.className="album";
-    div.innerHTML=`${a.name || "صورة جديدة"}`;
-    if(isVIP){
-      const actions = document.createElement("div");
-      actions.className="actions";
-      actions.innerHTML=`<button onclick="deleteAlbum(${i})">🗑️ حذف</button>`;
-      div.appendChild(actions);
+    function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
+    function editPost(idx){
+      let newText=prompt("تعديل النص:",posts[idx].text);
+      if(newText!==null){ posts[idx].text=newText; savePosts(); renderPosts(); }
     }
-    div.onclick = () => openGallery(i);
-    container.appendChild(div);
-  });
-}
-function saveAlbums(){ localStorage.setItem("albums",JSON.stringify(albums)); }
-function deleteAlbum(i){
-  if(confirm("حذف الألبوم؟")){ albums.splice(i,1); saveAlbums(); renderAlbums(); }
-}
-document.getElementById("uploadImage").onchange = function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    albums.push({name:"صورة جديدة", images:[reader.result]});
-    saveAlbums(); renderAlbums();
-  };
-  reader.readAsDataURL(file);
-};
-renderAlbums();
+    function deletePost(idx){
+      if(confirm("حذف المنشور؟")){ posts.splice(idx,1); savePosts(); renderPosts(); }
+    }
+    document.getElementById("postBtn").onclick = () => {
+      const text = document.getElementById("postText").value;
+      if(!text) return;
+      posts.push({text});
+      savePosts();
+      renderPosts();
+      document.getElementById("postText").value="";
+    };
+    renderPosts();
 
-/* ===== المعرض ===== */
-let currentAlbum = null, currentIndex=0;
-function openGallery(i){
-  currentAlbum = albums[i]; currentIndex=0;
-  document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
-  document.getElementById("gallery").style.display="flex";
-}
-function showImage(idx){
-  if(!currentAlbum) return;
-  currentIndex = (idx + currentAlbum.images.length) % currentAlbum.images.length;
-  document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
-}
-document.getElementById("prevImg").onclick = ()=>showImage(currentIndex-1);
-document.getElementById("nextImg").onclick = ()=>showImage(currentIndex+1);
-document.getElementById("closeGallery").onclick = ()=>document.getElementById("gallery").style.display="none";
+    /* ===== الألبومات ===== */
+    function renderAlbums(){
+      const container = document.getElementById("albums");
+      container.innerHTML="";
+      albums.forEach((a,i)=>{
+        const div = document.createElement("div");
+        div.className="album";
+        div.innerHTML=`${a.name || "صورة جديدة"}`;
+        div.onclick = () => openGallery(i);
+        container.appendChild(div);
+      });
+    }
+    function saveAlbums(){ localStorage.setItem("albums",JSON.stringify(albums)); }
+    document.getElementById("uploadImage").onchange = function(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        albums.push({name:"صورة جديدة", images:[reader.result]});
+        saveAlbums(); renderAlbums();
+      };
+      reader.readAsDataURL(file);
+    };
+    renderAlbums();
 
-/* ===== VIP ===== */
-if(isVIP) document.getElementById("postArea").classList.remove("disabled");
-document.getElementById("vipBtn").onclick = ()=>{
-  let attempts=0;
-  function ask(){
-    let pass=prompt("ادخل كلمة السر:");
-    if(pass==="135791"){
-      attempts++;
-      if(attempts<10){ alert("كلمة سر غير صحيحة ❌"); ask(); } 
-      else {
+    /* ===== المعرض ===== */
+    let currentAlbum = null, currentIndex=0;
+    function openGallery(i){
+      currentAlbum = albums[i]; currentIndex=0;
+      document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
+      document.getElementById("gallery").style.display="flex";
+    }
+    function showImage(idx){
+      if(!currentAlbum) return;
+      currentIndex = (idx + currentAlbum.images.length) % currentAlbum.images.length;
+      document.getElementById("galleryImg").src = currentAlbum.images[currentIndex];
+    }
+    document.getElementById("prevImg").onclick = ()=>showImage(currentIndex-1);
+    document.getElementById("nextImg").onclick = ()=>showImage(currentIndex+1);
+    document.getElementById("closeGallery").onclick = ()=>document.getElementById("gallery").style.display="none";
+
+    /* ===== VIP ===== */
+    if(isVIP) document.getElementById("postArea").classList.remove("disabled");
+    document.getElementById("vipBtn").onclick = ()=>{
+      let pass=prompt("ادخل كلمة السر:");
+      if(pass==="135791"){
         isVIP=true;
         localStorage.setItem("vip","true");
         document.getElementById("postArea").classList.remove("disabled");
         renderPosts(); renderAlbums();
         alert("🎉 أصبحت VIP");
-      }
-    } else { alert("كلمة سر غير صحيحة ❌"); ask(); }
-  }
-  ask();
-};
+      } else { alert("❌ كلمة السر خاطئة"); }
+    };
 
-/* ===== الترسيمات ===== */
-const overlay = document.getElementById("overlay");
-const profileList = document.getElementById("profiles");
-
-function renderProfiles(){
-  profileList.innerHTML="";
-  if(profiles.length===0){
-    for(let i=0;i<9;i++){
-      const div=document.createElement("div");
-      div.className="profile-card";
-      profileList.appendChild(div);
-    }
-  } else {
-    profiles.forEach(p=>{
-      const div=document.createElement("div");
-      div.className="profile-card";
-      div.innerHTML=`<img src="${p.image}"><span>${p.name}</span>`;
-      profileList.appendChild(div);
+    /* ===== الوضع الليلي/نهاري ===== */
+    let dark = true;
+    document.addEventListener("keydown",(e)=>{
+      if(e.key==="m"){ dark=!dark; document.body.classList.toggle("light-mode",!dark); }
     });
-  }
-}
-renderProfiles();
-
-document.getElementById("settingsBtn").onclick = ()=>overlay.style.display="flex";
-document.getElementById("closeOverlay").onclick = ()=>overlay.style.display="none";
-
-document.getElementById("addProfile").onclick = ()=>{
-  const name = document.getElementById("profileName").value;
-  const file = document.getElementById("profileImage").files[0];
-  if(!name || !file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    profiles.push({name,image:reader.result});
-    localStorage.setItem("profiles",JSON.stringify(profiles));
-    renderProfiles();
-  };
-  reader.readAsDataURL(file);
-  document.getElementById("profileName").value="";
-  document.getElementById("profileImage").value="";
-};
-
-document.getElementById("clearProfiles").onclick = ()=>{
-  if(confirm("مسح كل الترسيمات؟")){
-    profiles=[];
-    localStorage.setItem("profiles",JSON.stringify(profiles));
-    renderProfiles();
-  }
-};
-
-/* ===== الوضع الليلي/نهاري ===== */
-let dark = true;
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="m"){ dark=!dark; document.body.classList.toggle("light-mode",!dark); }
-});
-
+  </script>
 </body>
 </html>
-
