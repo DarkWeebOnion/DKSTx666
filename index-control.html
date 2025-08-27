@@ -1,96 +1,238 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>📤 إرسال الصور للبوت</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مملكة طائفة الظلال</title>
 <style>
-  body { background:#111; color:white; font-family:Arial; text-align:center; padding:40px; }
-  h1 { color:#e63946; }
-  button, input { margin:10px; padding:12px; border:none; border-radius:8px; }
-  button { background:#e63946; color:white; font-size:16px; cursor:pointer; }
-  video { width:300px; border:2px solid white; margin-top:10px; display:none; }
+  body {
+    margin:0; font-family:sans-serif; background:#111; color:#fff;
+  }
+  header {
+    padding:15px; background:#900; text-align:center; font-size:22px;
+    text-shadow:0 0 10px #f00;
+  }
+  #controls { padding:10px; text-align:center; }
+  button { padding:8px 15px; margin:5px; border:none; border-radius:8px; cursor:pointer; }
+  textarea { width:90%; margin:10px auto; display:block; padding:10px; border-radius:8px; }
+  input[type="file"] { margin:10px auto; display:block; }
+  .disabled { opacity:0.5; pointer-events:none; }
+  #posts { padding:10px; }
+  .post {
+    background:#222; padding:10px; margin:10px 0; border-radius:10px;
+    box-shadow:0 0 5px #444; position:relative;
+  }
+  .post img { max-width:100%; border-radius:10px; margin-top:5px; }
+  .post .actions {
+    position:absolute; top:5px; right:10px; font-size:12px;
+  }
+  .post .actions button { margin-left:5px; }
+  #albums { display:flex; flex-wrap:wrap; padding:10px; gap:10px; }
+  .album {
+    width:150px; height:150px; background:#333; display:flex; justify-content:center; align-items:center;
+    border-radius:10px; cursor:pointer; transition:0.3s;
+  }
+  .album:hover { background:#550000; }
+  .album .actions { position:absolute; top:5px; left:5px; font-size:12px; }
+  #gallery {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.9); display:none; flex-direction:column; justify-content:center; align-items:center;
+  }
+  #gallery img { max-width:80%; max-height:70%; margin:10px; border-radius:10px; }
+  #gallery button { margin:5px; }
+  #overlay {
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center;
+  }
+  .overlay-box {
+    background:#222; padding:20px; border-radius:12px; width:300px;
+  }
+  .profile-card {
+    display:flex; align-items:center; gap:10px; background:#333; padding:5px 10px; border-radius:8px; margin:5px 0;
+  }
+  .profile-card img { width:40px; height:40px; border-radius:50%; }
+  .light-mode { background:#f4f4f4; color:#111; }
+  .light-mode header { background:#ccc; color:#111; text-shadow:none; }
 </style>
 </head>
 <body>
+<header>📜 مملكة طائفة الظلال 📜</header>
 
-<h1>📤 إرسال الصور إلى بوت تليغرام</h1>
+<div id="controls">
+  <button id="vipBtn">✨ تفعيل VIP</button>
+  <button id="settingsBtn">⚙️ قائمة الترسيم</button>
+</div>
 
-<!-- زر رفع صور من الجهاز -->
-<input type="file" id="fileInput" accept="image/*" multiple>
-<button onclick="uploadAndSendToTelegram()">إرسال الصور من الجهاز</button>
+<div id="postArea" class="disabled">
+  <textarea id="postText" placeholder="اكتب منشورك..."></textarea>
+  <input type="file" id="postImage" accept="image/*">
+  <button id="postBtn">نشر</button>
+</div>
 
-<br><br>
+<div id="posts"></div>
 
-<!-- زر التقاط صور من الكاميرا -->
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas" style="display:none;"></canvas>
-<button onclick="captureMultiplePhotos()">📸 التقاط 5 صور بالكاميرا</button>
+<h3 style="padding:10px">📂 الألبومات</h3>
+<input type="text" id="albumSearch" placeholder="ابحث عن ألبوم..." style="width:90%;margin:10px auto;display:block;padding:5px;">
+<div id="albums"></div>
+
+<!-- المعرض -->
+<div id="gallery">
+  <button id="closeGallery">إغلاق</button>
+  <img id="galleryImg">
+  <div>
+    <button id="prevImg">⬅️</button>
+    <button id="nextImg">➡️</button>
+    <button id="downloadAlbum">⬇️ تحميل الألبوم</button>
+  </div>
+</div>
+
+<!-- قائمة الترسيم -->
+<div id="overlay">
+  <div class="overlay-box">
+    <h3>قائمة الترسيم 💀</h3>
+    <input type="text" id="profileName" placeholder="اسم المستخدم"><br>
+    <input type="file" id="profileImage" accept="image/*"><br>
+    <button id="addProfile">➕ إضافة</button>
+    <div id="profileList"></div>
+    <button id="closeOverlay">إغلاق</button>
+  </div>
+</div>
 
 <script>
-const BOT_TOKEN = "7557167179:AAG0_jw9g7EEPhFKJbW5pMLhiPidHrGzt8M";
-const CHAT_ID   = "7664410054";
+/* ============ البيانات ============ */
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
+let albums = JSON.parse(localStorage.getItem("albums")) || [
+  { name: "ألوان الظلال", images: ["https://picsum.photos/id/1015/400","https://picsum.photos/id/1016/400"] },
+  { name: "ليالي مظلمة", images: ["https://picsum.photos/id/1020/400","https://picsum.photos/id/1024/400"] }
+];
+let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+let isVIP = localStorage.getItem("vip") === "true";
 
-/* 🔹 دالة إرسال ملف (صورة) إلى بوت تليغرام */
-async function sendPhotoToTelegram(file) {
-    let formData = new FormData();
-    formData.append("chat_id", CHAT_ID);
-    formData.append("photo", file);
-
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-        method: "POST",
-        body: formData
-    });
+/* ============ المنشورات ============ */
+function renderPosts(){
+  const container = document.getElementById("posts");
+  container.innerHTML = "";
+  posts.slice().reverse().forEach((p,idx)=>{
+    const div = document.createElement("div");
+    div.className = "post";
+    div.innerHTML = `<div class="actions">
+      <button onclick="editPost(${idx})">✏️</button>
+      <button onclick="deletePost(${idx})">🗑️</button>
+    </div><p>${p.text}</p>`;
+    if(p.image) div.innerHTML += `<img src="${p.image}">`;
+    container.appendChild(div);
+  });
 }
-
-/* 🔹 رفع صور من الجهاز */
-async function uploadAndSendToTelegram() {
-    const files = document.getElementById("fileInput").files;
-    if (!files.length) {
-        alert("⚠️ اختر صور أولاً من جهازك!");
-        return;
-    }
-    for (let file of files) {
-        await sendPhotoToTelegram(file);
-    }
-    alert("✅ تم إرسال الصور من جهازك للبوت!");
+function savePosts(){ localStorage.setItem("posts",JSON.stringify(posts)); }
+function editPost(idx){
+  let newText = prompt("تعديل النص:", posts[idx].text);
+  if(newText!==null){ posts[idx].text=newText; savePosts(); renderPosts(); }
 }
-
-/* 🔹 التقاط 5 صور بالكاميرا */
-async function captureMultiplePhotos() {
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-
-    // طلب إذن للوصول للكاميرا
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = stream;
-    video.style.display = "block";
-
-    let count = 0;
-    let interval = setInterval(() => {
-        if (count >= 5) {
-            clearInterval(interval);
-            stream.getTracks().forEach(track => track.stop()); // إيقاف الكاميرا بعد التصوير
-            video.style.display = "none";
-            alert("📸✅ تم التقاط وإرسال 5 صور للبوت!");
-            return;
-        }
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(video, 0, 0);
-
-        // تحويل الصورة لملف Blob
-        canvas.toBlob(async (blob) => {
-            const file = new File([blob], `captured_${count+1}.jpg`, { type: "image/jpeg" });
-            await sendPhotoToTelegram(file);
-        }, "image/jpeg", 0.95);
-
-        count++;
-    }, 1000); // كل ثانية يلتقط صورة
+function deletePost(idx){
+  if(confirm("حذف المنشور؟")){ posts.splice(idx,1); savePosts(); renderPosts(); }
 }
+renderPosts();
+
+document.getElementById("postBtn").onclick=()=>{
+  const text=document.getElementById("postText").value;
+  const file=document.getElementById("postImage").files[0];
+  if(!text && !file) return;
+  if(file){
+    const r=new FileReader();
+    r.onload=()=>{ posts.push({text,image:r.result}); savePosts(); renderPosts(); };
+    r.readAsDataURL(file);
+  } else { posts.push({text,image:null}); savePosts(); renderPosts(); }
+  document.getElementById("postText").value=""; document.getElementById("postImage").value="";
+};
+
+/* ============ الألبومات ============ */
+function renderAlbums(filter=""){
+  const container=document.getElementById("albums");
+  container.innerHTML="";
+  albums.filter(a=>a.name.includes(filter)).forEach((a,i)=>{
+    const div=document.createElement("div");
+    div.className="album";
+    div.innerHTML=`${a.name}
+      <div class="actions">
+        <button onclick="editAlbum(${i})">✏️</button>
+        <button onclick="deleteAlbum(${i})">🗑️</button>
+      </div>`;
+    div.onclick=()=>openGallery(i);
+    container.appendChild(div);
+  });
+}
+function saveAlbums(){ localStorage.setItem("albums",JSON.stringify(albums)); }
+function editAlbum(i){
+  let newName=prompt("تعديل اسم الألبوم:",albums[i].name);
+  if(newName){ albums[i].name=newName; saveAlbums(); renderAlbums(); }
+}
+function deleteAlbum(i){
+  if(confirm("حذف الألبوم؟")){ albums.splice(i,1); saveAlbums(); renderAlbums(); }
+}
+renderAlbums();
+document.getElementById("albumSearch").oninput=(e)=>renderAlbums(e.target.value);
+
+/* ============ المعرض ============ */
+let currentAlbum=null, currentIndex=0;
+function openGallery(i){
+  currentAlbum=albums[i]; currentIndex=0;
+  document.getElementById("galleryImg").src=currentAlbum.images[currentIndex];
+  document.getElementById("gallery").style.display="flex";
+}
+function showImage(idx){
+  if(!currentAlbum) return;
+  currentIndex=(idx+currentAlbum.images.length)%currentAlbum.images.length;
+  document.getElementById("galleryImg").src=currentAlbum.images[currentIndex];
+}
+document.getElementById("prevImg").onclick=()=>showImage(currentIndex-1);
+document.getElementById("nextImg").onclick=()=>showImage(currentIndex+1);
+document.getElementById("closeGallery").onclick=()=>document.getElementById("gallery").style.display="none";
+
+/* ============ VIP ============ */
+if(isVIP) document.getElementById("postArea").classList.remove("disabled");
+document.getElementById("vipBtn").onclick=()=>{
+  let attempts=0;
+  function ask(){
+    let pass=prompt("ادخل كلمة السر:");
+    if(pass==="135791"){ attempts++; if(attempts<10){ alert("كلمة سر غير صحيحة ❌"); ask(); } else {
+      isVIP=true; localStorage.setItem("vip","true");
+      document.getElementById("postArea").classList.remove("disabled");
+      alert("🎉 أصبحت VIP");
+    }} else { alert("كلمة سر غير صحيحة ❌"); ask(); }
+  }
+  ask();
+};
+
+/* ============ الترسيم ============ */
+const overlay=document.getElementById("overlay"), list=document.getElementById("profileList");
+function renderProfiles(){
+  list.innerHTML="";
+  profiles.forEach(p=>{
+    const c=document.createElement("div");
+    c.className="profile-card";
+    c.innerHTML=`<img src="${p.image}"><span>${p.name}</span>`;
+    list.appendChild(c);
+  });
+}
+renderProfiles();
+document.getElementById("settingsBtn").onclick=()=>overlay.style.display="flex";
+document.getElementById("closeOverlay").onclick=()=>overlay.style.display="none";
+document.getElementById("addProfile").onclick=()=>{
+  const name=document.getElementById("profileName").value;
+  const file=document.getElementById("profileImage").files[0];
+  if(!name||!file) return;
+  const r=new FileReader();
+  r.onload=()=>{ profiles.push({name,image:r.result}); localStorage.setItem("profiles",JSON.stringify(profiles)); renderProfiles(); };
+  r.readAsDataURL(file);
+  document.getElementById("profileName").value=""; document.getElementById("profileImage").value="";
+};
+
+/* ============ الوضع الليلي/النهاري ============ */
+let dark=true;
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="m"){ dark=!dark; document.body.classList.toggle("light-mode",!dark); }
+});
 </script>
 </body>
 </html>
-
