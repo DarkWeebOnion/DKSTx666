@@ -11,22 +11,19 @@ header { padding:15px; background:#900; text-align:center; font-size:24px; text-
 
 #albums { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:10px; max-width:900px; margin:auto; }
 .album { background:#222; border-radius:10px; padding:5px; position:relative; cursor:pointer; }
-.album h4 { text-align:center; color:#fff; text-shadow: 0 0 10px #8000ff, 0 0 20px #ff0000; animation: pulse 2s infinite; }
-.album img { width:100%; height:120px; object-fit:cover; border-radius:8px; margin-bottom:5px; }
-@keyframes pulse {
-  0% { text-shadow:0 0 5px #8000ff,0 0 10px #ff0000; }
-  50% { text-shadow:0 0 20px #ff00ff,0 0 25px #ff0000; }
-  100% { text-shadow:0 0 5px #8000ff,0 0 10px #ff0000; }
-}
+.album h4 { text-align:center; color:#fff; }
+.album.pulse { animation: pulse 2s infinite; color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
+@keyframes pulse { 0%{ text-shadow:0 0 5px #ff00ff }50%{ text-shadow:0 0 20px #ff00ff }100%{ text-shadow:0 0 5px #ff00ff }}
 
 .comment-box { margin-top:5px; background:#111; padding:5px; border-radius:5px; font-size:14px; display:flex; align-items:center; gap:5px; }
 .comment-box img { width:30px; height:30px; border-radius:50%; }
 
-button { padding:5px 10px; margin-top:3px; border:none; border-radius:5px; cursor:pointer; }
-
 #profiles { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; padding:10px; }
 .profile-card { display:flex; flex-direction:column; justify-content:center; align-items:center; background:#333; padding:10px; border-radius:8px; width:100px; height:140px; margin:5px; }
-.profile-card img { width:60px; height:60px; border-radius:50%; margin-bottom:5px; }
+.profile-card.glow { animation: glow 2s infinite; }
+@keyframes glow { 0%{ box-shadow:0 0 5px #0f0 }50%{ box-shadow:0 0 20px #0f0 }100%{ box-shadow:0 0 5px #0f0 }}
+
+button { padding:5px 10px; margin:3px; border:none; border-radius:5px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -48,7 +45,8 @@ button { padding:5px 10px; margin-top:3px; border:none; border-radius:5px; curso
 // ===== بيانات الألبومات =====
 const albums = JSON.parse(localStorage.getItem("albums")) || [
   {name:"ألبوم 1", images:["images/gjgu1.jpg","images/gjgu2.jpg","images/gjgu3.jpg","images/gjgu4.jpg","images/gjgu5.jpg"], comments:[], description:"وصف الألبوم 1"},
-  {name:"ألبوم 2", images:["images/gjgu6.jpg","images/gjgu7.jpg","images/gjgu8.jpg","images/gjgu9.jpg","images/gjgu10.jpg"], comments:[], description:"وصف الألبوم 2"}
+  {name:"ألبوم 2", images:["images/gjgu6.jpg","images/gjgu7.jpg","images/gjgu8.jpg","images/gjgu9.jpg","images/gjgu10.jpg"], comments:[], description:"وصف الألبوم 2"},
+  {name:"ألبوم 3", images:["images/gjgu11.jpg","images/gjgu12.jpg","images/gjgu13.jpg","images/gjgu14.jpg","images/gjgu15.jpg"], comments:[], description:"وصف الألبوم 3"}
 ];
 
 // ===== بيانات الترسيم =====
@@ -77,7 +75,7 @@ function renderAlbums() {
   container.innerHTML="";
   albums.forEach((alb,idx)=>{
     const div = document.createElement("div");
-    div.className="album";
+    div.className="album" + (idx<3 ? " pulse" : "");
     div.innerHTML = `<h4>${alb.description}</h4>` +
                     alb.images.map(img=>`<img src="${img}">`).join("") +
                     `<div id="comments${idx}"></div>`;
@@ -109,7 +107,7 @@ function renderComments(idx){
     const cDiv = document.createElement("div");
     cDiv.className="comment-box";
     cDiv.innerHTML = `<img src="${c.image}"><span>${c.name}: ${c.text}</span>`;
-    
+
     if(isAdmin){
       const delBtn = document.createElement("button");
       delBtn.innerText = "❌";
@@ -130,6 +128,7 @@ function renderComments(idx){
 }
 
 function addComment(idx){
+  if(bannedUsers.includes(vipUser.name)){ alert("🚫 تم حضرك من التعليقات"); return; }
   const text = prompt("اكتب تعليقك:");
   if(text){
     albums[idx].comments.push({text, image:vipUser.image, name:vipUser.name});
@@ -143,52 +142,66 @@ function renderProfiles(){
   container.innerHTML="";
   profiles.forEach((p)=>{
     const div = document.createElement("div");
-    div.className="profile-card";
+    div.className="profile-card glow";
     div.innerHTML = `<img src="${p.image}"><span>${p.name}</span>`;
     container.appendChild(div);
   });
 }
 
-// ===== تفعيل VIP =====
+// ===== تفعيل VIP المضيف =====
 document.getElementById("vipBtn").onclick = ()=>{
-  const name = prompt("أدخل اسمك:");
-  const fileInput = document.createElement("input");
-  fileInput.type="file";
-  fileInput.accept="image/*";
-  fileInput.onchange = ()=>{
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      vipUser.name = name;
-      vipUser.image = reader.result;
-      isVIP = true;
-      renderAlbums();
-      alert("🎉 يمكنك الآن التعليق بصورتك واسمك!");
+  let attempts=0;
+  function askPass(){
+    attempts++;
+    const pass = prompt("ادخل كلمة سر VIP:");
+    if(pass==="135791"){
+      if(attempts>=10){
+        askName();
+      } else {
+        alert("كلمة سر غير صحيحة ❌"); askPass();
+      }
+    } else {
+      alert("كلمة سر غير صحيحة ❌"); askPass();
+    }
+  }
+  function askName(){
+    let name="";
+    while(name.length!==5){ name = prompt("ادخل اسم 5 أحرف:"); }
+    vipUser.name = name;
+    askImage();
+  }
+  function askImage(){
+    const fileInput = document.createElement("input");
+    fileInput.type="file"; fileInput.accept="image/*";
+    fileInput.onchange = ()=>{
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        vipUser.image = reader.result;
+        isVIP = true;
+        alert("🎉 يمكنك الآن التعليق بصورتك واسمك!");
+        renderAlbums();
+      };
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-  };
-  fileInput.click();
+    fileInput.click();
+  }
+  askPass();
 }
 
 // ===== تفعيل الأدمن =====
 document.getElementById("adminBtn").onclick = ()=>{
   let attempts=0;
   function askPass(){
-    const pass = prompt("ادخل كلمة سر الأدمن:");
     attempts++;
-    if(pass==="انا قحبة تاع شادو"){
-      if(attempts>=5){
+    const pass = prompt("ادخل كلمة سر الأدمن:");
+    if(pass==="666"){
+      if(attempts>=10){
         isAdmin = true;
         alert("🛡️ تم تفعيل وضع الأدمن");
         renderAlbums();
-      } else {
-        alert(`عدد المحاولات ${attempts}/5`);
-        askPass();
-      }
-    } else {
-      alert("كلمة سر خاطئة!");
-      askPass();
-    }
+      } else { alert("كلمة سر غير صحيحة ❌"); askPass(); }
+    } else { alert("كلمة سر غير صحيحة ❌"); askPass(); }
   }
   askPass();
 }
